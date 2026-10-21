@@ -1,0 +1,5 @@
+# 统一使用 LF，避免 Windows 换行造成测试失败与无关 diff
+* text=auto eol=lf
+*.md text eol=lf
+*.py text eol=lf
+*.txt text eol=lf
