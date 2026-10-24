@@ -1,6 +1,6 @@
 # references：知识索引
 
-本目录存放技能的工艺、流程、边界与研究文档，共 58 份。**不要整目录阅读**：先由 [统一路由](routing.md) 判定任务，再按症状加载一至三份；单次优先解决一两个主要问题。
+本目录存放技能的工艺、流程、边界与研究文档，共 62 份。**不要整目录阅读**：先由 [统一路由](routing.md) 判定任务，再按症状加载一至三份；单次优先解决一两个主要问题。
 
 ## 一、入口与地图
 
@@ -60,6 +60,10 @@
 | 文档 | 用途 |
 |---|---|
 | [by-genre.md](by-genre.md) | 分文体策略：同一技法在不同文体里的"度" |
+| [argumentative-craft.md](argumentative-craft.md) | 议论文与评论：争点四层、主张与授权句、让步—反驳、谬误自检 |
+| [academic-craft.md](academic-craft.md) | 期刊与会议论文：强度与证据相配、摘要双模型、审稿回复信 |
+| [thesis-craft.md](thesis-craft.md) | 研究生学位论文与答辩：先取本校稿约、跨章一致、引用闭合、披露 |
+| [speech-craft.md](speech-craft.md) | 演讲稿与致辞口播：场合语域、复沓各族、听读句法 |
 | [screenplay-craft.md](screenplay-craft.md) | 剧本与影视剧本：格式、结构、微短剧 |
 | [chinese-screenplay-format.md](chinese-screenplay-format.md) | 中文横屏、竖屏、舞台等格式的适用差异 |
 | [poetry-craft.md](poetry-craft.md) | 诗歌韵律体系：格律、炼字、意象、现代诗 |

@@ -16,6 +16,8 @@
     英文线索沿用英文分支权重，不按中文字数放大；混语分数不兼容旧版。
     v0.42：句长标准差也改为零权重观察；与v0.41的短句占比、重复“不是…而是…”均不计分。
     v0.43：段落长度与正则锚点密度也改为零权重观察，不为比例或密度添删信息。
+    v0.51：[分行结构] 在长文本（[分行] 触发）同样输出了；句末标点只认句号/问号/
+           叹号/省略号（分号、冒号不算），清单与表格不再被当成诗行。
     不能用跨版本降分证明改稿收益。
     文体门控按 GENRE_SKIPS 逐文体关闭检查项：tech/academic/official 关闭全部结构类
     检查（该类文体本就需要平行结构与统一句式）；law 关闭短句/顿号连排/冒号列表/
@@ -280,6 +282,77 @@ def english_issues(body, skips):
     return found
 
 
+# 行末「句末标点」：句号/问号/叹号/省略号，允许其后紧跟收尾引号或括号。
+# 分号与冒号是句内停顿，不算句末——否则「山一程；水一程；」这类分行会被误判为已闭合。
+LINE_CLOSED = re.compile(r"[。！？…．?!]+[”\"'』」）)\]]*$")
+
+# 列表/表格行首标记。清单、核对表与 Markdown 表格不是分行韵文，不能按诗行统计，
+# 否则「检查版本号」这类条目会被报成韵脚候选（v0.51 实测的误报）。
+LIST_MARK = re.compile(r"^\s*(?:[-*+•]\s+|\d{1,3}[.、)]\s*|\[[ xX]\]\s+|>\s?)")
+
+
+def is_list_or_table(text):
+    """行首标记占非空行过半时，把文本视为列表或表格，跳过诗行统计。"""
+    lines = [ln.strip() for ln in text.split("\n") if ln.strip()]
+    if len(lines) < 4:
+        return False
+    marked = sum(1 for ln in lines if LIST_MARK.match(ln) or ln.count("|") >= 2)
+    return marked * 2 >= len(lines)
+
+
+def _line_label(nums, limit=8):
+    """行号标签只展示前若干项，避免长诗把一行输出撑成整屏。"""
+    shown = "、".join(map(str, nums[:limit]))
+    if len(nums) > limit:
+        return "第%s…行（共 %d 行）" % (shown, len(nums))
+    return "第%s行" % shown
+
+
+def line_structure_observations(body, raw=None):
+    """Position statistics for line-broken text (poems, lyrics, scripts).
+
+    Unlike the weighted density checks, these are counts and line numbers, so they stay
+    meaningful for a four-line poem; they are emitted even on the "short"/"limited" paths where
+    no score can be given, and on the scored path when the text is line-dominant. Zero weight,
+    no judgment, no thresholds to hit.
+    """
+    if is_list_or_table(raw if raw is not None else body):
+        return []
+    lines = [ln.strip() for ln in body.split("\n") if chinese_len(ln.strip()) >= 2]
+    if len(lines) < 4:
+        return []
+    open_ends = [i for i in range(len(lines) - 1) if not LINE_CLOSED.search(lines[i])]
+    if len(open_ends) * 2 < len(lines) - 1:
+        return []
+
+    out = ["[分行结构] 有效行 %d 行，其中 %d 处行末没有句末标点（跨行候选）→ 只报位置；分行与跨行本身不产生诗意，也不因整齐或参差加减分"
+           % (len(lines), len(open_ends))]
+    lens = [chinese_len(x) for x in lines]
+    shown_lens = "、".join(str(x) for x in lens[:24]) + ("…共 %d 行" % len(lens) if len(lens) > 24 else "")
+    out.append("[分行结构] 行长 %d–%d 字（逐行 %s）→ 均匀与参差都可能有用，不设目标区间，不为参差改行"
+               % (min(lens), max(lens), shown_lens))
+    where = {}
+    for i, x in enumerate(lines, 1):
+        where.setdefault(x, []).append(i)
+    repeated = [(k, v) for k, v in where.items() if len(v) > 1]
+    if repeated:
+        more = "（另有 %d 组未列出）" % (len(repeated) - 3) if len(repeated) > 3 else ""
+        out.append("[分行结构] 整行原样复现：%s%s → 核对每次出现是否改变了语境；叠句不设次数上下限，无位移才算空转"
+                   % ("；".join("「%s」%s" % (k, _line_label(v)) for k, v in repeated[:3]), more))
+    tails = {}
+    for i, x in enumerate(lines, 1):
+        core = re.sub(r"[，、；：。！？…、“”\"'（）()\s]+$", "", x).strip()
+        if core:
+            tails.setdefault(core[-1], []).append(i)
+    rhymes = sorted(((k, v) for k, v in tails.items() if len(v) >= 2), key=lambda kv: -len(kv[1]))
+    if rhymes:
+        more = "（另有 %d 组未列出）" % (len(rhymes) - 3) if len(rhymes) > 3 else ""
+        out.append("[分行结构] 行末同字候选：%s%s → 仅作位置线索；是否合律要按用户指定的谱本与韵书逐字核验，这里不判合律也不判押韵好坏"
+                   % ("；".join("「%s」%s" % (k, _line_label(v)) for k, v in rhymes[:3]), more))
+    out.append("[分行结构] 以上是位置统计，不构成诗意或质量判断；密度类分数仍需有效中文 ≥%d，不足则记「无法判定」" % MIN_CHARS)
+    return [(0, m) for m in out]
+
+
 def check(text, genre="general", language="auto"):
     issues = []
 
@@ -302,9 +375,11 @@ def check(text, genre="general", language="auto"):
         return issues, "unsupported"
     if language == "zh" and total < MIN_CHARS:
         add(0, "[无法判定] 声明为中文，但有效中文 %d 字不足 %d；其他文字不代替中文统计样本" % (total, MIN_CHARS))
+        issues.extend(line_structure_observations(body, text))
         return issues, "short"
     if language == "en" and en_words < EN_MIN_WORDS:
         add(0, "[无法判定] 声明为英文，但ASCII词形 %d 个不足 %d；计数并非语言识别" % (en_words, EN_MIN_WORDS))
+        issues.extend(line_structure_observations(body, text))
         return issues, "short"
     if language == "mixed" and (not total or not en_words):
         add(0, "[语言声明不匹配] mixed 需要中文和ASCII词形均存在；请按实际输入声明语言")
@@ -313,6 +388,7 @@ def check(text, genre="general", language="auto"):
     if total + en_words < MIXED_MIN_UNITS:
         add(0, "[无法判定] %s（ASCII 词形 %d 个，合计 %d）；样本量不足，统计特征不成立，勿据此判分"
                % (note, en_words, total + en_words))
+        issues.extend(line_structure_observations(body, text))
         return issues, "short"
 
     if total < MIN_CHARS:
@@ -327,6 +403,16 @@ def check(text, genre="general", language="auto"):
         return issues, "limited" if limited else "ok"
 
     add(0, "[概览] " + note)
+
+    # v0.49：分行文本的测量失效提示（零权重，不改变分数；实测 24 个有效行仅切出 1 句）
+    # v0.51：同一条件（行多句少）下补出 [分行结构]——此前它只在短样本路径可达，
+    #        超过 100 有效中文的长诗/歌词反而永远拿不到行级位置统计。
+    lines = [ln for ln in body.split("\n") if chinese_len(ln.strip()) >= 2]
+    if not is_list_or_table(text) and len(lines) >= 8 and len(sents) * 3 <= len(lines):
+        add(0, "[分行] %d 行短行只切出 %d 句：行末没有句末标点时句子会跨行连读，"
+               "句长、短句占比与段落类检查在这里几乎没有对象。此行为测量说明，不计分、"
+               "不评价分行/跨行/节奏的好坏，也不因分行整齐或参差加减分" % (len(lines), len(sents)))
+        issues.extend(line_structure_observations(body, text))
 
     if skips:
         add(0, "[genre] %s 文体：已关闭 %s（这些形式在该文体可有正常用途；历史设计样本见 tests/corpus/SOURCES.md，不代表充分标定），其余检查照常" % (genre, "、".join(skips)))

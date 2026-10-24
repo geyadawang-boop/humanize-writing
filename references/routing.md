@@ -28,13 +28,16 @@
 | 电影剧本 | [screenplay-workflow.md](screenplay-workflow.md) | [chinese-screenplay-format.md](chinese-screenplay-format.md)或明确要求的好莱坞格式 | 整部连续场景与结局 |
 | 电视剧/横屏网剧 | 剧本工作流的分集结构 | 中文格式、分集大纲与A/B线 | 全季主线与每集目标均覆盖 |
 | 竖屏微短剧 | 剧本工作流的短剧分支 | 中文格式与场景成本 | 全部约定集数；钩子、兑现、终局相连 |
-| 话剧/舞台剧 | 剧本工作流的舞台分支 | screenplay-craft 舞台节 | 幕场、上下场、可表演动作与台词 |
+| 话剧/舞台剧 | 剧本工作流的舞台分支 | [screenplay-craft.md](screenplay-craft.md) 舞台节 | 幕场、上下场、可表演动作与台词 |
 | 广播剧/有声剧 | 剧本工作流的声音分支 | 对白、声音提示与声场 | 关键信息不只存在于画面 |
 | 分镜脚本/拍摄稿 | 先定镜号、景别、运动、声音、时长栏 | cinematic-craft、中文格式 | 不与文学剧本混作一种验收 |
-| 诗歌/散文诗 | [poetry-craft.md](poetry-craft.md) | rhetoric-craft | 声音、意象关系、形式契约；不强迫情节闭合 |
-| 演讲稿/发言稿/致辞 | [by-genre.md](by-genre.md)演讲节 | 文体适配；有原稿时接编辑流程 | 事实、场合、听读与时限契约；估时不冒充实际试讲 |
+| 诗歌/散文诗/歌词/旧体 | [poetry-craft.md](poetry-craft.md)（歌词见 §八、格律核验见 §二可查表入口、跨行与当代路线见 §六） | rhetoric-craft；检测与 lint 边界见 §十 | 声音、意象关系、形式契约；歌词按唱法与乐句判重复；不强迫情节闭合 |
+| 演讲稿/发言稿/致辞/口播 | [speech-craft.md](speech-craft.md) | by-genre 演讲节、文体适配；有原稿时接编辑流程 | 事实、场合、听读与时限契约；估时不冒充实际试讲；礼仪套语按功能保留 |
 | 散文/随笔/特稿 | [genre-router.md](genre-router.md) + by-genre 对应节 | 描写、段落、文风 | 区分虚构散文与真实经历/采访 |
-| 学术/商务/公文/技术文本 | genre-router + [editing-workflow.md](editing-workflow.md) | 相关文体节、现有格式要求 | 意义、术语、证据与责任表达准确 |
+| 议论文/评论/驳论文 | [argumentative-craft.md](argumentative-craft.md) | argument-and-rhythm（句层）、by-genre 议论文节 | 争点定位正确、材料与授权句可核、反方真实存在；不为结构造对手 |
+| 学术期刊/会议论文 | [academic-craft.md](academic-craft.md) | genre-router、editing-workflow、目标刊《投稿须知》 | 问题—方法—证据—结论闭合；语言强度与证据相配；稿约数字绑具体刊物 |
+| 研究生学位论文/开题/答辩 | [thesis-craft.md](thesis-craft.md)（先取本校现行稿约） | genre-router、editing-workflow、longform-revision（换轴后借） | 符合稿约、跨章一致、引用双向闭合、披露如实；格式检测通过≠学术通过 |
+| 商务/公文/技术文本 | genre-router + [editing-workflow.md](editing-workflow.md) | 相关文体节、现有格式要求 | 意义、术语、证据与责任表达准确 |
 
 短作不需要建十几张表。长作品、跨会话或多集项目才启用项目执行层；用户给定目录时在该目录工作，已有文件先读后改。原有台账可逐步接入，不静默搬家或批量覆盖。
 
@@ -54,6 +57,8 @@
 
 | 正在解决的问题 | 文件 | 先查的证据 |
 |---|---|---|
+| 论点站不住、让步与反驳失衡、造对手、判断句停在评价壳里 | [argumentative-craft.md](argumentative-craft.md)，句层再读[argument-and-rhythm.md](argument-and-rhythm.md) | 反方是否真被提出并有出处；材料与结论之间有无授权句；限定词对应哪个真实例外 |
+| 学位论文跨章术语/编号/引用不闭合、综述写成罗列、结论复读各章 | [thesis-craft.md](thesis-craft.md) | 本校现行稿约原文；引用双向闭合；该段是否新增可核查证据或推论 |
 | 长稿结构修订、中段停滞、人物漂移、重复情节或仓促结尾 | [longform-revision.md](longform-revision.md)，再按具体问题选下列工艺 | 实稿反向章场表、保留约束、前后依赖和修订后果；局部润色不启动全书重构 |
 | 人物扁平、动机或转变突然 | [character-craft.md](character-craft.md) | 欲望、行动、代价、转变前后场景 |
 | 台词混同、交代生硬、直说与潜台词不合场景、署名或动作失当 | [dialogue-craft.md](dialogue-craft.md)；武侠加 [wuxia-dialogue.md](wuxia-dialogue.md) | 交流理由、原有立场、知识与辨人需要；不预设说明性对白或没有潜台词就是缺点 |

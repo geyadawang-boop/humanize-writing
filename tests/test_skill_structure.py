@@ -18,6 +18,10 @@ ACTIVE = (
     'references/quick-reference.md', 'references/deai-techniques.md',
     'references/writing-workflow.md', 'templates/README.md',
     'references/style-craft.md', 'references/style-spectrum-craft.md',
+    'references/academic-craft.md', 'references/thesis-craft.md',
+    'references/argumentative-craft.md', 'references/speech-craft.md',
+    'references/poetry-craft.md', 'references/prose-flow-craft.md',
+    'references/argument-and-rhythm.md',
     'references/research-basis.md', 'references/source-evidence.md',
     'templates/quality-review.md',
 )
@@ -66,6 +70,25 @@ class SkillStructureTests(unittest.TestCase):
                 self.assertFalse(data.startswith(b'\xef\xbb\xbf'))
                 self.assertNotIn(b'\0', data)
                 self.assertTrue(data.decode('utf-8').strip())
+
+
+    def test_skill_and_readme_versions_agree(self):
+        """版本号曾多次手工同步；这里把 SKILL 元数据、README 标题与最新版本节绑在一起。"""
+        skill = (ROOT / 'SKILL.md').read_text(encoding='utf-8')
+        match = re.search(r"version:\s*'([0-9]+\.[0-9]+)'", skill)
+        self.assertIsNotNone(match, 'SKILL.md 缺少 metadata.version')
+        version = match.group(1)
+        readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+        head = "\n".join(readme.splitlines()[:10])
+        self.assertIn(version, head, 'README 顶部（标题或元数据表）未写当前版本')
+        sections = re.findall(r'^## v([0-9]+\.[0-9]+)', readme, re.M)
+        if not sections:
+            changelog = ROOT / 'CHANGELOG.md'
+            if changelog.is_file():
+                sections = re.findall(r'^## ([0-9]+\.[0-9]+)', changelog.read_text(encoding='utf-8'), re.M)
+        self.assertEqual(sections[0], version, '最新版本记录必须就是当前版本')
+        self.assertEqual(sections, sorted(sections, key=lambda v: tuple(map(int, v.split('.'))), reverse=True),
+                         '版本记录必须按版本号降序排列')
 
 
 if __name__ == '__main__':
