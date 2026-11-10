@@ -8,6 +8,8 @@
     python ai_smell_lint.py --language en -       # 显式声明英文；auto不自动识别语言
     --language auto/zh/en/mixed：默认auto；不足100中文字的未声明ASCII文本仅有限扫描。
     python ai_smell_lint.py --genre law 文章.md   # 文体门控（general/tech/academic/official/law/email/speech/fiction）
+    python ai_smell_lint.py --fingerprint 文章.md # 字符与句长分布观察（零权重，不判模型）
+    python ai_smell_lint.py --candidates 文章.md  # 语义层候选抽取（零权重，需按判据判读）
 
 静态写作线索分 0-100，越高表示本规则集的加权命中越多，不等于文本越差。
 这是编辑启发式指标，不是AI生成概率，不鉴定作者或预测外部检测通过率:
@@ -18,6 +20,9 @@
     v0.43：段落长度与正则锚点密度也改为零权重观察，不为比例或密度添删信息。
     v0.51：[分行结构] 在长文本（[分行] 触发）同样输出了；句末标点只认句号/问号/
            叹号/省略号（分号、冒号不算），清单与表格不再被当成诗行。
+    v0.52：新增 [X 级] 已否决特征计数（只防误改，不计分）；--fingerprint 输出
+           破折号/引号/分号/顿号/「的」与句长中位（未按模型分组标定，只观察）；
+           --candidates 抽取四类语义候选供逐条判读。三者均零权重、不改变分数与退出码。
     不能用跨版本降分证明改稿收益。
     文体门控按 GENRE_SKIPS 逐文体关闭检查项：tech/academic/official 关闭全部结构类
     检查（该类文体本就需要平行结构与统一句式）；law 关闭短句/顿号连排/冒号列表/
@@ -158,6 +163,32 @@ NOMINAL_RES = (
 ENUM_SEG = ("一是", "二是", "三是", "四是")
 POLITE_A = re.compile(r"首先[^。！？]{0,15}感谢")
 POLITE_B = re.compile(r"再次感谢")
+
+# v0.52 X 级：外部同题配对复测方向不成立（人类侧不低于 AI 侧）的特征。只计数、
+# 明确标注不改，用来防止过度清理；本项目语料未复测，故不据此调整任何现有权重。
+VETO_ORDINAL = re.compile(r"(?m)^#{1,6}\s{0,3}[一二三四五六七八九十]+[、.]")
+VETO_RESTATE = ("这意味着", "这表明", "这说明")
+
+# v0.52 指纹：分模型用法偏好的观察量。破折号/引号/分号在不同模型上方向相反，
+# 只能描述本篇分布，不能反推来源模型，也不设目标值。
+FINGERPRINT_MARKS = ("——", "“", "；", "、", "的")
+
+# v0.52 语义候选：脚本只给位置和原文，判读交给按封闭判据逐条答是/否的读者或模型。
+# 候选本身不是问题，也不构成改写理由。
+TRANSITIONS = ("因此", "所以", "这意味着", "这说明", "这也说明", "从这个角度",
+               "换句话说", "也就是说", "与此同时", "更重要的是", "值得注意的是",
+               "接下来", "回到")
+CONCLUSION_CUE = re.compile(
+    r"(?:一句话(?:总结|说|概括)|简单说|说白了|总结|小结|结论|核心问题(?:是|在于)?"
+    r"|核心(?:是|在于)?|关键问题(?:是|在于)?|关键(?:是|在于)?|本质(?:是|上)?"
+    r"|答案(?:是)?|问题(?:是|在于)?|原因(?:是|在于)?)[：:]")
+SYN_GROUPS = (
+    ("提升", "提高", "增强", "优化", "改善"),
+    ("使用", "采用", "运用", "利用", "借助"),
+    ("问题", "难题", "挑战", "困境", "痛点"),
+    ("重要", "关键", "核心", "至关重要"),
+)
+CANDIDATE_LIMIT = 3
 
 SENT_SPLIT = re.compile(r"[。！？!?；;…]+")
 DUNHAO_RUN = re.compile(r"(?:[^、，。？！\s]{1,10}、){3,}[^、，。？！\s]{1,10}")
@@ -351,6 +382,129 @@ def line_structure_observations(body, raw=None):
                    % ("；".join("「%s」%s" % (k, _line_label(v)) for k, v in rhymes[:3]), more))
     out.append("[分行结构] 以上是位置统计，不构成诗意或质量判断；密度类分数仍需有效中文 ≥%d，不足则记「无法判定」" % MIN_CHARS)
     return [(0, m) for m in out]
+
+
+def _sample(seq, limit=CANDIDATE_LIMIT):
+    """超过上限时按等距抽样，保留首尾附近的分布，避免只报开头几处。"""
+    if len(seq) <= limit:
+        return list(seq)
+    step = len(seq) / float(limit)
+    return [seq[int(i * step)] for i in range(limit)]
+
+
+def veto_observations(raw):
+    """X 级：已否决特征只计数，永不进入改写建议，也不计分。"""
+    out = []
+    ordinals = VETO_ORDINAL.findall(raw)
+    if ordinals:
+        out.append((0, "[X 级] 序数词小标题 %d 处 → 外部 270 对同题配对复测中人类并不更少"
+                       "（8.6%% vs 4.9%%），不是 AI 痕迹；编号照旧，不改、不删" % len(ordinals)))
+    restate = sum(raw.count(w) for w in VETO_RESTATE)
+    if restate:
+        out.append((0, "[X 级] 「这意味着/这表明/这说明」式复述 %d 处 → 配对复测人类反而更多"
+                       "（0.027 vs 0.016/千字），不改、不删、不换成别的连接词" % restate))
+    if out:
+        out.append((0, "[X 级] 以上是已否决特征，只展示计数以防误改；不计分、不进改写建议。"
+                       "证据来自外部同题配对复测，本项目语料未复测；要改相关权重须先在 tests/ 语料上标定"))
+    return out
+
+
+def fingerprint_observations(text):
+    """字符与句长的原始分布：零权重，不判模型，不设目标值。"""
+    body = strip_markdown(text)
+    total = chinese_len(body)
+    if total < MIN_CHARS:
+        return [(0, "[X 指纹] 有效中文 %d 字不足 %d，字符密度与句长中位不成立，本档不报数据" % (total, MIN_CHARS))]
+    dash = len(re.findall(r"—+", body))
+    quotes = body.count("“")
+    semis = body.count("；")
+    dunhao = body.count("、")
+    de = body.count("的")
+    lens = [chinese_len(s) for s in sentences(body)]
+    median = statistics.median(lens) if lens else 0
+    per = lambda n: n * 1000.0 / total
+    out = ["[X 指纹] 破折号 %d 处（%.2f/千字）· 引号 %d 对（%.2f/千字）· 分号 %d 处（%.2f/千字）"
+           "· 顿号 %d 处（%.2f/千字）· 「的」%d 次（%.2f/千字）· 句长中位 %.0f 字（%d 句）"
+           % (dash, per(dash), quotes, per(quotes), semis, per(semis),
+              dunhao, per(dunhao), de, per(de), median, len(lens))]
+    out.append("[X 指纹] 破折号/引号/分号在不同生成模型上方向相反（有模型偏多、有模型偏少），"
+               "不能反推本篇来源；本规则集未在本项目语料按模型分组标定，故只观察、不计分、不设目标值。"
+               "某项偏低不构成补写理由，也不得为了对齐参考值增删标点")
+    return [(0, m) for m in out]
+
+
+def semantic_candidates(text):
+    """四类语义候选：只给位置与原文，判读按封闭判据逐条答是/否，候选不等于问题。"""
+    body = strip_markdown(text)
+    paras = raw_paragraphs(body)
+    out = []
+
+    # ① 段间衔接接口：连续段落以承接语开头（连续 ≥3 段才列为候选）
+    hits = []
+    for i, p in enumerate(paras, 1):
+        word = next((t for t in TRANSITIONS if p[:10].startswith(t)), None)
+        if word:
+            hits.append((i, word))
+    runs, cur = [], []
+    for i, word in hits:
+        if cur and i == cur[-1][0] + 1:
+            cur.append((i, word))
+        else:
+            if len(cur) >= 3:
+                runs.append(cur)
+            cur = [(i, word)]
+    if len(cur) >= 3:
+        runs.append(cur)
+    if runs:
+        run = runs[0]
+        where = "、".join(str(i) for i, _ in _sample(run))
+        words = "」「".join(w for _, w in _sample(run))
+        out.append((0, "[语义候选] 段间衔接接口：连续 %d 段以承接语开头（第 %s 段，如「%s」）"
+                       "→ 只标位置；按判据核对是否段段紧扣、零跳转。放行：论证链关键环节、"
+                       "教程与法律文书" % (len(run), where, words)))
+
+    # ② 结论提示冒号：冒号前是独立结论性判断
+    cues = CONCLUSION_CUE.findall(body)
+    if cues:
+        out.append((0, "[语义候选] 结论提示冒号 %d 处（例：%s）→ 只标位置；核对冒号前是否为独立结论、"
+                       "冒号后是否展开论证。冒号总量人类反而更多，纯列举与导航不加罚"
+                   % (len(cues), "」「".join(_sample(cues)))))
+
+    # ③ 同义重命名：同一段内换用同组近义词称同一概念
+    renamed = []
+    for idx, p in enumerate(paras, 1):
+        for group in SYN_GROUPS:
+            found = [w for w in group if w in p]
+            if len(found) >= 2:
+                renamed.append((idx, found))
+                break
+    if renamed:
+        picks = _sample(renamed)
+        detail = "；".join("第 %d 段「%s」" % (i, "」/「".join(ws)) for i, ws in picks)
+        out.append((0, "[语义候选] 同义重命名 %d 段（%s）→ 只标位置；核对是否把同一实体换了说法。"
+                       "不同实体恰好近义、术语首次介绍的「又名」和文学性指称变化不加罚"
+                   % (len(renamed), detail)))
+
+    # ④ 等长三连：连续三句长度相同，只作位置线索。等长不等于骨架同构，
+    #    真正的同构要逐句读句法，这里只负责把可疑位置挑出来。
+    lens = [chinese_len(s) for s in sentences(body)]
+    runs3 = []
+    i = 0
+    while i + 2 < len(lens):
+        if lens[i] >= 6 and lens[i] == lens[i + 1] == lens[i + 2]:
+            runs3.append((i + 1, lens[i]))
+            i += 3
+        else:
+            i += 1
+    if runs3:
+        where = "、".join("第 %d 句起（%d 字）" % r for r in _sample(runs3))
+        out.append((0, "[语义候选] 等长三连 %d 组（%s）→ 只标位置；等长不等于骨架同构，"
+                       "须逐句读句法后再判。刻意修辞、清单表格与叙事推进不加罚" % (len(runs3), where)))
+
+    if out:
+        out.append((0, "[语义候选] 以上候选只给位置，不含判定、不计分、不构成改写理由；"
+                       "请按封闭判据逐条答是/否，拿不准选兜底。判读标准见 references/quick-reference.md 与编辑流程"))
+    return out
 
 
 def check(text, genre="general", language="auto"):
@@ -560,7 +714,7 @@ def check(text, genre="general", language="auto"):
     return issues, "ok"
 
 
-def evaluate(text, genre="general", language="auto"):
+def evaluate(text, genre="general", language="auto", fingerprint=False, candidates=False):
     issues, status = check(text, genre, language)
     # 英文信号保留其自身权重；不得因中文 99→100 字而被乘 3。
     english_score = sum(w for w, m in issues if m.startswith(ENGLISH_ISSUE_TAGS))
@@ -573,6 +727,13 @@ def evaluate(text, genre="general", language="auto"):
             issues.append((0, "[短文本] 有效量 %d 单位（中文字 + ASCII 词），中文线索按 %d 单位基准归一 ×%.2f；英文线索不放大" % (
                 units, SCORE_NORM_CHARS, SCORE_NORM_CHARS / units)))
     score = min(100, english_score + chinese_score)
+    # v0.52：X 级计数始终输出；指纹与语义候选按需开启。三者都在分数算完之后追加，
+    # 权重固定为 0，不改变 status、分数与退出码。
+    issues.extend(veto_observations(text))
+    if fingerprint:
+        issues.extend(fingerprint_observations(text))
+    if candidates:
+        issues.extend(semantic_candidates(text))
     return issues, status, score
 
 
@@ -594,6 +755,8 @@ def main(argv):
     as_json = False
     genre = "general"
     language = "auto"
+    fingerprint = False
+    candidates = False
     paths = []
     i = 0
     while i < len(argv):
@@ -603,6 +766,10 @@ def main(argv):
             return 0
         elif a == "--json":
             as_json = True
+        elif a == "--fingerprint":
+            fingerprint = True
+        elif a == "--candidates":
+            candidates = True
         elif a == "--":
             paths.extend(argv[i + 1:])
             break
@@ -640,7 +807,7 @@ def main(argv):
         except (OSError, UnicodeError) as exc:
             print("无法读取输入 %s: %s" % (p, exc), file=sys.stderr)
             return 2
-        issues, status, score = evaluate(text, genre, language)
+        issues, status, score = evaluate(text, genre, language, fingerprint, candidates)
         results.append({
             "path": p,
             "genre": genre,
