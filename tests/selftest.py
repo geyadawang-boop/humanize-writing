@@ -6,7 +6,7 @@
 
 退出码 0 = 全部通过；非 0 = 有断言失败（打印明细）。
 覆盖点：
-  1. 冻结ai_heavy样本按v0.43得33分，核对剩余独立信号；旧47分含已撤回的形式罚分
+  1. 冻结ai_heavy样本按v0.44得24分，核对剩余独立信号；v0.43 的33分含已零权重的路标词9分
   2. 人味样本必须判"优秀"
   3. 末段"综上所述"必须被识别为总结式结尾（旧版检测位置错位，会漏报）
   4. 正常逻辑连接词"因此"结尾不得被误判为总结式结尾（旧版会误报）
@@ -217,11 +217,11 @@ def main():
     fails = []
 
     issues, status, score = lint.evaluate(SAMPLE_AI)
-    # v0.43撤回段落6分与锚点8分：同一原稿47→33；不调整阈值来保留旧分类。
-    expected_weighted = sorted([(4, "[AI 词]")] * 4 + [(9, "[路标词]"), (8, "[总结式结尾]")])
+    # v0.44撤回路标词9分：同一原稿24；不调整阈值来保留旧分类。
+    expected_weighted = sorted([(4, "[AI 词]")] * 4 + [(8, "[总结式结尾]")])
     actual_weighted = sorted((w, m.split("]", 1)[0] + "]") for w, m in issues if w)
-    if status != "ok" or score != 33 or actual_weighted != expected_weighted:
-        fails.append("① 冻结样本按v0.43应得33分并保留4个词表、路标词及总结式结尾信号，实得 score=%s status=%s weighted=%s" % (score, status, actual_weighted))
+    if status != "ok" or score != 24 or actual_weighted != expected_weighted:
+        fails.append("① 冻结样本按v0.44应得24分并保留4个词表与总结式结尾信号，实得 score=%s status=%s weighted=%s" % (score, status, actual_weighted))
 
     issues, status, score = lint.evaluate(SAMPLE_HUMAN)
     if status != "ok" or score >= lint.GOOD_LINE:
@@ -387,9 +387,9 @@ def main():
                     tag, [m for w, m in law_issues if w and m.startswith(tag)]))
         if not any(m.startswith("[genre] law") for _, m in law_issues):
             fails.append("⑭ law 门控缺 [genre] 说明行")
-        if not (any(m.startswith("[路标词]") and w for w, m in law_issues)
+        if not (any(m.startswith("[路标词]") for _, m in law_issues)
                 and any("[AI 词]" in m and w for w, m in law_issues)):
-            fails.append("⑭ law 门控应保留路标词与 AI 词检查")
+            fails.append("⑭ law 门控应保留路标词观察行与 AI 词加权检查")
         if law_score >= gen_score:
             fails.append("⑭ law 模式风险分应低于 general，实得 law=%d general=%d"
                          % (law_score, gen_score))
@@ -405,14 +405,14 @@ def main():
     if gen_status != "ok" or sp_status != "ok":
         fails.append("⑭ SPEECH_SPEC 过短（general=%s speech=%s），测试无效" % (gen_status, sp_status))
     else:
-        if not any(m.startswith("[路标词]") and w for w, m in gen_issues):
-            fails.append("⑭ SPEECH_SPEC general 模式应命中 [路标词]（回归基线失效）")
-        if any(m.startswith("[路标词]") and w for w, m in sp_issues):
+        if not any(m.startswith("[路标词]") for _, m in gen_issues):
+            fails.append("⑭ SPEECH_SPEC general 模式应命中 [路标词] 观察行（回归基线失效）")
+        if any(m.startswith("[路标词]") for _, m in sp_issues):
             fails.append("⑭ speech 门控未豁免 [路标词]")
         if not any(m.startswith("[genre] speech") for _, m in sp_issues):
             fails.append("⑭ speech 门控缺 [genre] 说明行")
-        if sp_score >= gen_score:
-            fails.append("⑭ speech 模式风险分应低于 general，实得 speech=%d general=%d"
+        if sp_score != gen_score:
+            fails.append("⑭ [路标词] 已零权重，speech 与 general 应等分，实得 speech=%d general=%d"
                          % (sp_score, gen_score))
 
     gen_issues, gen_status, gen_score = lint.evaluate(FICTION_SPEC)
@@ -431,33 +431,39 @@ def main():
                          % (fi_score, gen_score))
 
     # ⑮ v0.20 新增检查：探针正反双向 + AI 对照语料命中 + 真人语料/对抗样本零误伤
-    for pname, text, tag, expect in (
-        ("四字套话+排比串", QUAD_PAIR_POS, "[四字套话]", True),
-        ("四字套话-长列举串", QUAD_PAIR_NEG, "[四字套话]", False),
-        ("段首序数+路标起段", ORD_POS, "[段首序数]", True),
-        ("段首序数-「一、」编号", ORD_NEG, "[段首序数]", False),
-        ("展望收尾+末段", OUTLOOK_POS, "[展望式收尾]", True),
-        ("展望收尾-仅前段", OUTLOOK_NEG, "[展望式收尾]", False),
-        ("文艺比喻-两处明喻", SIMILE_POS, "[文艺比喻]", True),
-        ("文艺比喻-仅一处", SIMILE_NEG, "[文艺比喻]", False),
-        ("抽象名词化-一种包装", NOMINAL_POS, "[抽象名词化]", True),
-        ("抽象名词化-动作落地", NOMINAL_NEG, "[抽象名词化]", False),
-        ("段内枚举-一是二是", ENUM_POS, "[段内枚举]", True),
-        ("段内枚举-前导非标点", ENUM_NEG, "[段内枚举]", False),
-        ("礼貌框架-成对客套", POLITE_POS, "[礼貌框架]", True),
-        ("礼貌框架-仅再次感谢", POLITE_NEG, "[礼貌框架]", False),
+    for pname, text, tag, expect, weighted in (
+        ("四字套话+排比串", QUAD_PAIR_POS, "[四字套话]", True, True),
+        ("四字套话-长列举串", QUAD_PAIR_NEG, "[四字套话]", False, True),
+        ("段首序数+路标起段", ORD_POS, "[段首序数]", True, False),
+        ("段首序数-「一、」编号", ORD_NEG, "[段首序数]", False, False),
+        ("展望收尾+末段", OUTLOOK_POS, "[展望式收尾]", True, True),
+        ("展望收尾-仅前段", OUTLOOK_NEG, "[展望式收尾]", False, True),
+        ("文艺比喻-两处明喻", SIMILE_POS, "[文艺比喻]", True, True),
+        ("文艺比喻-仅一处", SIMILE_NEG, "[文艺比喻]", False, True),
+        ("抽象名词化-一种包装", NOMINAL_POS, "[抽象名词化]", True, True),
+        ("抽象名词化-动作落地", NOMINAL_NEG, "[抽象名词化]", False, True),
+        ("段内枚举-一是二是", ENUM_POS, "[段内枚举]", True, True),
+        ("段内枚举-前导非标点", ENUM_NEG, "[段内枚举]", False, True),
+        ("礼貌框架-成对客套", POLITE_POS, "[礼貌框架]", True, True),
+        ("礼貌框架-仅再次感谢", POLITE_NEG, "[礼貌框架]", False, True),
     ):
         issues, status, _ = lint.evaluate(text)
-        hit = any(m.startswith(tag) and w for w, m in issues)
+        present = any(m.startswith(tag) for _, m in issues)
+        has_weight = any(m.startswith(tag) and w for w, m in issues)
+        hit = present if not expect else (has_weight if weighted else present)
+        if not weighted and has_weight:
+            fails.append("⑮ 探针 %s 的 %s 应为零权重观察" % (pname, tag))
         if status != "ok" or hit != expect:
             fails.append("⑮ 探针 %s 应命中=%s，实得 status=%s 命中=%s" % (pname, expect, status, hit))
 
     d_ca = ROOT / "tests" / "corpus_ai"
     ca_em_issues, ca_em_status, ca_em_score = lint.evaluate(
         (d_ca / "ai_email_reply.md").read_text(encoding="utf-8"), genre="email")
-    if ca_em_status != "ok" or not all(
-            any(m.startswith(t) and w for w, m in ca_em_issues) for t in ("[段首序数]", "[展望式收尾]", "[段内枚举]")):
-        fails.append("⑮ ai_email_reply 应命中 [段首序数]+[展望式收尾]+[段内枚举]（status=%s）" % ca_em_status)
+    if ca_em_status != "ok" or not (
+            any(m.startswith("[段首序数]") for _, m in ca_em_issues)
+            and all(any(m.startswith(t) and w for w, m in ca_em_issues)
+                    for t in ("[展望式收尾]", "[段内枚举]"))):
+        fails.append("⑮ ai_email_reply 应命中 [段首序数] 观察行 + [展望式收尾]+[段内枚举]（status=%s）" % ca_em_status)
     if any(m.startswith("[四字套话]") and w for w, m in ca_em_issues):
         fails.append("⑮ ai_email_reply 不应命中 [四字套话]")
     ca_sp_issues, ca_sp_status, ca_sp_score = lint.evaluate(
@@ -468,17 +474,23 @@ def main():
     ca_law_issues, ca_law_status, _ = lint.evaluate(
         (d_ca / "ai_law_memo.md").read_text(encoding="utf-8"), genre="law")
     if ca_law_status == "ok":
-        hit_new = [t for t in NEW_TAGS if any(m.startswith(t) and w for w, m in ca_law_issues)]
+        hit_new = [t for t in NEW_TAGS
+                   if any(m.startswith(t) and (True if t == "[段首序数]" else w)
+                          for w, m in ca_law_issues)]
         if hit_new:
             fails.append("⑮ ai_law_memo 不应命中新检查（已知盲区应保持稳定）: %s" % hit_new)
     for genre, name in CORPUS_REAL:
         issues, _, _ = lint.evaluate(
             (ROOT / "tests" / "corpus" / name).read_text(encoding="utf-8"), genre=genre)
-        hit_new = [t for t in NEW_TAGS if any(m.startswith(t) and w for w, m in issues)]
+        hit_new = [t for t in NEW_TAGS
+                   if any(m.startswith(t) and (True if t == "[段首序数]" else w)
+                          for w, m in issues)]
         if hit_new:
             fails.append("⑮ 真人语料 %s 误伤新检查: %s" % (name, hit_new))
     deai_issues, _, _ = lint.evaluate(SAMPLE_DEAI)
-    hit_new = [t for t in NEW_TAGS if any(m.startswith(t) and w for w, m in deai_issues)]
+    hit_new = [t for t in NEW_TAGS
+               if any(m.startswith(t) and (True if t == "[段首序数]" else w)
+                      for w, m in deai_issues)]
     if hit_new:
         fails.append("⑮ 对抗样本误伤新检查: %s" % hit_new)
 
@@ -489,7 +501,7 @@ def main():
         return 1
 
     print("自测全部通过 ✓")
-    print("  冻结 ai_heavy 样本 score=%d（v0.43应 =33；旧47含段落6+锚点8，不调整25/40阈值）" % lint.evaluate(SAMPLE_AI)[2])
+    print("  冻结 ai_heavy 样本 score=%d（v0.44应 =24；v0.43 的 33 含路标词9分，不调整25/40阈值）" % lint.evaluate(SAMPLE_AI)[2])
     print("  人味样本 score=%d（应 <%d）" % (lint.evaluate(SAMPLE_HUMAN)[2], lint.GOOD_LINE))
     print("  短文本 AI 腔 score=%d（应 >%d）" % (lint.evaluate(SAMPLE_AI_SHORT)[2], lint.PASS_LINE))
     print("  短文本人味稿 score=%d（应 <%d）" % (lint.evaluate(SAMPLE_HUMAN_SHORT)[2], lint.GOOD_LINE))

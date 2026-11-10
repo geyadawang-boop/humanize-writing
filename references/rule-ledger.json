@@ -1,0 +1,564 @@
+{
+  "skill_version": "0.53",
+  "ruleset_version": "0.44",
+  "scope": "中文/声明英文的静态词表与结构启发式；不判作者身份、不预测外部检测",
+  "genre_skips": {
+    "general": [],
+    "tech": [
+      "句长",
+      "短句",
+      "路标词",
+      "顿号连排",
+      "冒号列表",
+      "总结式结尾",
+      "段落均匀",
+      "段落开头",
+      "段内枚举"
+    ],
+    "academic": [
+      "句长",
+      "短句",
+      "路标词",
+      "顿号连排",
+      "冒号列表",
+      "总结式结尾",
+      "段落均匀",
+      "段落开头",
+      "段内枚举"
+    ],
+    "official": [
+      "句长",
+      "短句",
+      "路标词",
+      "顿号连排",
+      "冒号列表",
+      "总结式结尾",
+      "段落均匀",
+      "段落开头",
+      "段内枚举"
+    ],
+    "law": [
+      "短句",
+      "顿号连排",
+      "冒号列表",
+      "段落开头",
+      "总结式结尾"
+    ],
+    "email": [],
+    "speech": [
+      "路标词"
+    ],
+    "fiction": [
+      "段落开头"
+    ]
+  },
+  "rules": [
+    {
+      "tag": "[AI 词]",
+      "kind": "weighted",
+      "weight": "min(12, 4×命中词数)",
+      "evidence": "cred 30 对 δ=-0.20（AI 略多，方向成立）；外部 270 对 δ≈+0.10 不显著。保留权重但不放大。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。我们要形成闭环，打造抓手，做好顶层设计。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[路标词]",
+      "kind": "observation",
+      "weight": "0（v0.44 起观察）",
+      "evidence": "hc3 12 对 δ=+0.01、cred 30 对 δ=+0.24；人类每千字 2.45 处、AI 0.06 处 → v0.44 零权重。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。首先核对合同。其次登记数量。最后保存原稿。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[段首序数]",
+      "kind": "observation",
+      "weight": "0（v0.44 起观察）",
+      "evidence": "与路标词同源；配对语料未显示人类更少 → v0.44 零权重。",
+      "probe": {
+        "text": "首先，操作人员先清点库存，再核对登记簿上的日期与签名，把差异写在备注栏里。\n\n其次，操作人员把复核结果交给负责人，负责人逐页签字，随后送回档案室归档保存。\n\n最后，操作人员封存原稿，把复印件交给档案室留存，原件当天不再外借，钥匙交回值班室。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[常见小说表达]",
+      "kind": "weighted",
+      "weight": "5（≥3 种）/ 3（2 种）",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。他眼底闪过一丝慌乱，缓缓抬头，嘴角微微勾起。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[程度用语]",
+      "kind": "weighted",
+      "weight": "4/词（同一词 ≥3 次）",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。记录十分清楚。操作十分谨慎。我们十分担忧。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[AI 句式]",
+      "kind": "weighted",
+      "weight": "5（超过该模式上限）",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。随着技术的发展，流程不断调整。随着设备的进步，记录方式也变了。随着流程的推进，交接手续更加复杂。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[对照句式]",
+      "kind": "observation",
+      "weight": "0（v0.41 起只定位复读）",
+      "evidence": "v0.41 起零权重：重复次数只定位，不判拉踩。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。不是流程有问题，而是习惯没有建立。不是设备老化，而是维护没有跟上。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[顿号连排]",
+      "kind": "weighted",
+      "weight": "min(8, 4×处数)",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。苹果、香蕉、橘子、梨子、桃子、葡萄。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[冒号列表]",
+      "kind": "weighted",
+      "weight": "5（≥2 处）",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。需要准备三样东西：一是合同，二是印章，三是回执。\n\n还要注意三件事：一是日期，二是签名，三是归档。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[四字套话]",
+      "kind": "weighted",
+      "weight": "6（≥3 对且 ≥2 对/300 字）",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。统筹兼顾、协调推进。狠抓落实、务求实效。以人为本、服务大局。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[文艺比喻]",
+      "kind": "weighted",
+      "weight": "8（≥2 处且 ≥1/300 字）",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。她的眼睛像一汪深潭。夜色像一块湿布。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[抽象名词化]",
+      "kind": "weighted",
+      "weight": "5（族内只报一次）",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。这样做变成了一种难以言明的负担。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[总结式结尾]",
+      "kind": "weighted",
+      "weight": "8",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。\n\n综上所述，流程还需要继续调整。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[结尾]",
+      "kind": "observation",
+      "weight": "0（状态/观察行）",
+      "evidence": "与总结式结尾互斥的状态观察，权重 0。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。\n\n他把原稿放回抽屉，关灯离开。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[展望式收尾]",
+      "kind": "weighted",
+      "weight": "8",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。\n\n相信我们一定能够完成任务。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[段落开头]",
+      "kind": "weighted",
+      "weight": "5（同一开头 ≥3 段）",
+      "evidence": "hc3 12 对 δ=-0.50（AI 更多），保留 5 分；cred 未出现，样本小。",
+      "probe": {
+        "text": "操作人员先清点库存，再核对登记簿上的日期与签名，把差异写在备注栏里，等负责人复核。\n\n操作人员把复核结果交给负责人，负责人逐页签字，随后送回档案室归档保存，并在封面上注明日期。\n\n操作人员最后封存原稿，把复印件交给档案室留存，原件当天不再外借，钥匙交回值班室。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[段内枚举]",
+      "kind": "weighted",
+      "weight": "6",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。需要处理三件事：一是核对，二是登记，三是归档。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[礼貌框架]",
+      "kind": "weighted",
+      "weight": "5",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。首先感谢您的来信。再次感谢您的耐心。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[句长]",
+      "kind": "observation",
+      "weight": "0（状态/观察行）",
+      "evidence": "v0.42 起零权重，不设目标区间。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[短句]",
+      "kind": "observation",
+      "weight": "0（状态/观察行）",
+      "evidence": "v0.41 起零权重，不设合格比例。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[段落]",
+      "kind": "observation",
+      "weight": "0（状态/观察行）",
+      "evidence": "v0.43 起段落长度零权重。",
+      "probe": {
+        "text": "操作人员先清点库存，再核对登记簿上的日期与签名，把差异写在备注栏里，等负责人复核。\n\n操作人员把复核结果交给负责人，负责人逐页签字，随后送回档案室归档保存，并在封面上注明日期。\n\n操作人员最后封存原稿，把复印件交给档案室留存，原件当天不再外借，钥匙交回值班室。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[锚点]",
+      "kind": "observation",
+      "weight": "0（状态/观察行）",
+      "evidence": "v0.43 起锚点密度零权重，不为密度添删信息。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。九月二十日，第三组取了3次，每次5个。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[分行]",
+      "kind": "observation",
+      "weight": "0（状态/观察行）",
+      "evidence": "v0.49 起零权重：分行文本的测量说明。",
+      "probe": {
+        "text": "山高水长路远风轻云淡\n风轻云淡天蓝日暖风和\n春来秋去人老花开叶落\n花开叶落无声水流向东\n江河日夜东流不改旧时\n草木一岁一枯又逢新春\n旧事随风散尽不留痕迹\n新愁又上心头难以排遣\n灯下独坐良久无人相伴\n窗外月色如霜照见归路",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[分行结构]",
+      "kind": "observation",
+      "weight": "0（状态/观察行）",
+      "evidence": "v0.51 起长文本同样输出；行级位置统计，零权重。",
+      "probe": {
+        "text": "山高水长路远风轻云淡\n风轻云淡天蓝日暖风和\n春来秋去人老花开叶落\n花开叶落无声水流向东\n江河日夜东流不改旧时\n草木一岁一枯又逢新春\n旧事随风散尽不留痕迹\n新愁又上心头难以排遣\n灯下独坐良久无人相伴\n窗外月色如霜照见归路",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[概览]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence": "状态/提示行，不参与计分。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[genre]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence": "状态/提示行，不参与计分。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。",
+        "genre": "tech",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[短文本]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence": "状态/提示行，不参与计分。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。闭环",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[有限词表扫描：语言未确认]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence": "状态/提示行，不参与计分。",
+      "probe": {
+        "text": "Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. ",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[X 级]",
+      "kind": "observation",
+      "weight": "0（观察）",
+      "evidence": "外部同题配对复测方向不成立；只防误改，不计分。",
+      "probe": {
+        "text": "## 一、背景\n\n第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。\n\n这意味着旧表不再使用。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[X 指纹]",
+      "kind": "observation",
+      "weight": "0（观察）",
+      "evidence": "分模型方向相反，未在本项目语料按模型分组标定；只观察。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": true,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[语义候选]",
+      "kind": "observation",
+      "weight": "0（观察）",
+      "evidence": "只给位置，须按封闭判据判读；候选不构成改写理由。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。\n\n因此，先核对。\n\n所以，再登记。\n\n与此同时，开始归档。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": true
+      }
+    },
+    {
+      "tag": "[英文 AI 词]",
+      "kind": "weighted",
+      "weight": "min(10, 2×次数)",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "probe": {
+        "text": "Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. We will delve into the robust and seamless tapestry of this crucial landscape. ",
+        "genre": "general",
+        "language": "en",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[英文总结式结尾]",
+      "kind": "weighted",
+      "weight": "8",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "probe": {
+        "text": "Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. We will delve into the robust and seamless tapestry of this crucial landscape. \n\nIn conclusion, the project was hard and the result is modest.",
+        "genre": "general",
+        "language": "en",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[不支持的文字范围]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence": "状态/提示行，不参与计分。",
+      "probe": {
+        "text": "Привет мир, как дела?",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[无法判定]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence": "状态/提示行，不参与计分。",
+      "probe": {
+        "text": "他停下。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[语言声明不匹配]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence": "状态/提示行，不参与计分。",
+      "probe": {
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。",
+        "genre": "general",
+        "language": "mixed",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[语言范围]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence": "状态/提示行，不参与计分。",
+      "probe": {
+        "text": "Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. ",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[英文词表模式（调用者声明）]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence": "状态/提示行，不参与计分。",
+      "probe": {
+        "text": "Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. ",
+        "genre": "general",
+        "language": "en",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[混合模式]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence": "状态/提示行，不参与计分。",
+      "probe": {
+        "text": "操作人员先清点库存，再核对登记簿上的日期与签名。Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. ",
+        "genre": "general",
+        "language": "mixed",
+        "fingerprint": false,
+        "candidates": false
+      }
+    }
+  ]
+}

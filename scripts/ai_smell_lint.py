@@ -10,6 +10,7 @@
     python ai_smell_lint.py --genre law 文章.md   # 文体门控（general/tech/academic/official/law/email/speech/fiction）
     python ai_smell_lint.py --fingerprint 文章.md # 字符与句长分布观察（零权重，不判模型）
     python ai_smell_lint.py --candidates 文章.md  # 语义层候选抽取（零权重，需按判据判读）
+    python ai_smell_lint.py --all 文章.md         # 同时开启指纹与语义候选（X 级默认就有）
 
 静态写作线索分 0-100，越高表示本规则集的加权命中越多，不等于文本越差。
 这是编辑启发式指标，不是AI生成概率，不鉴定作者或预测外部检测通过率:
@@ -23,6 +24,10 @@
     v0.52：新增 [X 级] 已否决特征计数（只防误改，不计分）；--fingerprint 输出
            破折号/引号/分号/顿号/「的」与句长中位（未按模型分组标定，只观察）；
            --candidates 抽取四类语义候选供逐条判读。三者均零权重、不改变分数与退出码。
+    v0.53（规则集 0.44）：本项目 12 对 hc3 + 30 对 cred 同题配对复测后，[路标词]
+           与 [段首序数] 改为零权重观察——人类每千字 2.45 处、AI 0.06 处，罚次数
+           方向相反；[AI 词] 方向成立但样本小，保留权重并登记证据；[段落开头] 在
+           hc3 上方向成立，保留。规则台账见 references/rule-ledger.json。
     不能用跨版本降分证明改稿收益。
     文体门控按 GENRE_SKIPS 逐文体关闭检查项：tech/academic/official 关闭全部结构类
     检查（该类文体本就需要平行结构与统一句式）；law 关闭短句/顿号连排/冒号列表/
@@ -45,7 +50,7 @@ import re
 import statistics
 import sys
 
-RULESET_VERSION = "0.43"
+RULESET_VERSION = "0.44"
 
 for stream in (sys.stdout, sys.stderr):
     try:
@@ -581,10 +586,10 @@ def check(text, genre="general", language="auto"):
     issues.extend(chinese_word_issues(body))
     if "路标词" not in skips:
         road = sum(body.count(w) for w in ROAD_WORDS)
-        if road >= 3:
-            add(min(9, 3 * (road - 2)), "[路标词] 首先/其次/最后… 共 %d 处（≥3）→ 核对是否冗余；必要流程顺序、论证导航和人物声口保留，不按比例删除" % road)
-        elif road:
-            add(0, "[路标词] 共 %d 处（尚可）" % road)
+        if road:
+            add(0, "[路标词] 共 %d 处（仅观察，不计分）→ 本项目配对语料里人类每千字 2.45 处、AI 0.06 处，"
+                   "罚次数与实际方向相反；只在确属冗余时删，必要流程顺序、论证导航和人物声口保留"
+                % road)
     novel_hits = [w for w in NOVEL_WORDS if w in body]
     if len(novel_hits) >= 3:
         add(5, "[常见小说表达] 命中 %d 种（%s…）→ 核对是否空泛、重复或不合人物声口；有叙事功能则保留，修订须保留动机与节奏" % (
@@ -692,7 +697,8 @@ def check(text, genre="general", language="auto"):
 
     ord_starts = [p for p in paras if ORDINAL_START.search(p)]
     if len(ord_starts) >= 3:
-        add(6, "[段首序数] %d 段以 首先/其次/最后… 起头（≥3）→ 检查是否冗余；必要流程顺序与导航保留" % len(ord_starts))
+        add(0, "[段首序数] %d 段以 首先/其次/最后… 起头（仅观察，不计分）→ 与 [路标词] 同源，"
+               "本项目配对语料未显示人类更少；不按次数改段首，必要流程顺序与导航保留" % len(ord_starts))
 
     # v0.23 信号 C：段内枚举（段中无冒号的"一是…二是…"；要求前导标点，
     # 防"统一是/唯一是"误命中；真人公文的「一、」编号不受影响）。
@@ -769,6 +775,9 @@ def main(argv):
         elif a == "--fingerprint":
             fingerprint = True
         elif a == "--candidates":
+            candidates = True
+        elif a == "--all":
+            fingerprint = True
             candidates = True
         elif a == "--":
             paths.extend(argv[i + 1:])

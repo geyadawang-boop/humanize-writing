@@ -145,6 +145,11 @@ class CliObservationFlags(unittest.TestCase):
         self.assertIn("--fingerprint", result.stdout)
         self.assertIn("--candidates", result.stdout)
 
+    def test_all_flag_turns_on_both_observation_layers(self):
+        result = self.run_cli(["--all", "-"])
+        self.assertIn("[X 指纹]", result.stdout)
+        self.assertIn("[语义候选]", result.stdout)
+
     def test_flags_do_not_change_exit_code_and_stay_json(self):
         plain = self.run_cli(["--json", "-"])
         flagged = self.run_cli(["--json", "--fingerprint", "--candidates", "-"])
