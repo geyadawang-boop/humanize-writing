@@ -444,7 +444,11 @@ def novel_progress_errors(root, state, final=False):
     recorded = set()
     for row in rows:
         chapter = ledger_check.parse_chapter(row['章'])
-        if chapter is None or chapter in recorded:
+        if chapter is None:
+            raise ProjectError('章节进度表含无法解析或重复的已完成章号')
+        if not any(value.strip() for key, value in row.items() if key != '章'):
+            continue  # 模板占位行：只有章号、其余全空，不算完成记录
+        if chapter in recorded:
             raise ProjectError('章节进度表含无法解析或重复的已完成章号')
         recorded.add(chapter)
     written = {u['sequence'] for u in state['units'] if u['status'] in ('drafted', 'revised')
@@ -793,6 +797,8 @@ def main(argv=None):
         elif command == 'resize':
             resize_project(root, state, args.units, args.reason)
         elif command == 'reopen':
+            if state['stage'] != 'complete':
+                raise ProjectError('项目尚未登记完结，无需重开；暂停项目请用 resume')
             invalidate(state)
             state['stage'] = 'revising'
             state['next_step'] = args.next_step

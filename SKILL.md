@@ -2,7 +2,7 @@
 name: humanize-writing
 description: 创作、续写、修订和润色中文或英文文本：去 AI 味、去 AI 腔、去模板感、拆套话、说人话，改善空洞、重复与过度工整的表达。适用于小说、网文、剧本、诗歌、歌词、旧体诗词、散文、议论文、学术论文与研究生学位论文、演讲稿与发言稿、标题，以及只查不改的文本评阅；长篇任务管理大纲、正文、连续性台账和完结验收。检测分数仅供编辑参考，不鉴定作者身份或保证过检。
 metadata:
-  version: '0.55'
+  version: '0.56'
 ---
 
 # Humanize Writing
@@ -27,6 +27,7 @@ metadata:
 | 电影 / 电视剧 / 短剧 / 话剧 / 广播剧 | [剧本全程流程](references/screenplay-workflow.md) | 先定媒介与交付格式；连续项目再读项目执行 |
 | 小说改剧本 / 剧本转小说 / 多种交付物 | [统一路由](references/routing.md)的改编分支 | 源作事实与目标媒介分别管理，逐项验收 |
 | 查知识覆盖、路由或整部创作能力 | [知识与能力地图](references/knowledge-map.md)；需要补料时读[资料补充与验证](references/material-intake.md) | 区分知识缺口、作品需求缺口与长篇验证缺口；只索取有明确用途的材料 |
+| 找不到对应主题 / 需要全量文档清单 | [知识库总索引](references/README.md) | 62 篇文档按用途分组；先查索引再按需加载，不整目录通读 |
 
 校园/青春题材按上述交付物选主流程，再按需追加[校园创作指南](references/campus-youth-craft.md)；涉及中国影视制作/公开播出的审校时，再查[内容与未成年人边界](references/china-screen-content-boundaries.md)。不能仅因“校园”关键词把小说改派为儿童节目或法律审查。
 

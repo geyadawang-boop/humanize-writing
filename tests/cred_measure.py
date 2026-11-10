@@ -13,7 +13,6 @@
 """
 import importlib.util
 import pathlib
-import statistics
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]

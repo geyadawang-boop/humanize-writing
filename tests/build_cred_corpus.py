@@ -1,7 +1,6 @@
 import csv
 import hashlib
 import re
-import sys
 import statistics
 from pathlib import Path
 

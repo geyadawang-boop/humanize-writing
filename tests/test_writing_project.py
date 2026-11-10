@@ -162,6 +162,18 @@ class ProjectTest(unittest.TestCase):
         self.assertEqual(before, (self.root / 'manuscript/CH001.md').read_bytes())
         self.assertNotEqual(self.command('complete', str(self.root))[0], 0)
 
+    def test_reopen_requires_completed_project(self):
+        state = self.healthy()
+        before = state.copy()
+        code, output = self.command('reopen', str(self.root), '--next', '误重开')
+        self.assertEqual(code, 2, output)
+        self.assertIn('尚未登记完结', output)
+        self.assertEqual(wp.load_state(self.root)['stage'], before['stage'])
+        self.assertEqual(self.command('pause', str(self.root), '--next', '暂停核读')[0], 0)
+        code, output = self.command('reopen', str(self.root), '--next', '暂停下误重开')
+        self.assertEqual(code, 2, output)
+        self.assertEqual(wp.load_state(self.root)['stage'], 'paused')
+
     def test_init_never_overwrites_existing_content(self):
         self.root.mkdir()
         self.write('keep.md', '用户的既有文稿')
@@ -352,6 +364,18 @@ class ProjectTest(unittest.TestCase):
         self.write('ledger/chapter-progress.md', '| 章 | 情绪强度 |\n|---|---|\n| 1 | 7 |\n')
         self.assertEqual(wp.novel_progress_errors(self.root, state, final=False), [])
         self.assertTrue(wp.novel_progress_errors(self.root, state, final=True))
+
+    def test_template_placeholder_rows_are_not_completion_records(self):
+        state = wp.init_project(self.root, 'novel', '短篇小说', 2, '借灯')
+        self.write('ledger/chapter-progress.md',
+                   '| 章 | 日期 | 字数 | 本章事件 | 章末钩子类型 | 情绪强度 1–10 | 伏笔动作 | 台账更新 ✓ | 备注 |\n'
+                   '|---|---|---|---|---|---|---|---|---|\n'
+                   '| 1 |  |  |  |  |  |  |  |  |\n'
+                   '| 2 |  |  |  |  |  |  |  |  |\n')
+        self.assertEqual(wp.novel_progress_errors(self.root, state, final=False), [])
+        errors = wp.novel_progress_errors(self.root, state, final=True)
+        self.assertTrue(any('漏记' in value for value in errors), errors)
+        self.assertFalse(any('记为完成' in value for value in errors), errors)
 
     def test_fenced_or_commented_scene_tables_are_not_canonical_records(self):
         state = self.healthy('screenplay', reviewed=False)
