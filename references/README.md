@@ -6,7 +6,7 @@
 
 | 文档 | 用途 |
 |---|---|
-| [rule-ledger.json](rule-ledger.json) | 规则台账：39 条规则的标签、类型、权重、证据与可触发探针；`tests/test_rule_ledger.py` 逐条校验 |
+| [rule-ledger.json](rule-ledger.json) | 规则台账：41 条规则的标签、类型、权重、证据与可触发探针；`tests/test_rule_ledger.py` 逐条校验 |
 | [routing.md](routing.md) | 唯一任务分派入口：操作 → 作品 → 阶段 → 症状；旧 A–I 模式仅作兼容别名 |
 | [genre-router.md](genre-router.md) | 文体适配：用途、媒介与语域决定技法强度 |
 | [quick-reference.md](quick-reference.md) | 26 个检查点速查，改稿时照单核对 |

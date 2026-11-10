@@ -71,7 +71,7 @@ class ArgumentRhythmTests(unittest.TestCase):
                                     encoding="utf-8", timeout=15)
             self.assertIn(result.returncode, (0, 1))
             data = json.loads(result.stdout)[0]
-            self.assertEqual(data["ruleset_version"], "0.44")
+            self.assertEqual(data["ruleset_version"], "0.45")
             self.assertEqual(data["score_kind"], "static_style_heuristic")
             self.assertIs(data["is_ai_probability"], False)
             self.assertEqual(source.read_bytes(), original)

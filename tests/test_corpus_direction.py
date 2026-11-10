@@ -87,6 +87,37 @@ class CorpusDirectionTests(unittest.TestCase):
                                 "hc3 配对上段首重复应偏 AI，否则应降权")
         self.assertEqual(next(r for r in LEDGER["rules"] if r["tag"] == "[段落开头]")["kind"], "weighted")
 
+    def test_translationese_family_has_no_stable_direction(self):
+        """整族在两套语料上方向相反，因此只允许零权重。"""
+        def density(path):
+            body = body_of(path)
+            total = LINT.chinese_len(body) or 1
+            hits = sum(len(rx.findall(body)) for _, rx in LINT.TRANSLATIONESE)
+            return hits * 1000.0 / total
+
+        hc3_diff = mean([a - h for h, a in ((density(x), density(y)) for x, y in hc3_pairs())])
+        cred_diff = mean([a - h for h, a in ((density(x), density(y)) for x, y in cred_pairs())])
+        self.assertLess(hc3_diff * cred_diff, 0,
+                        "两套语料方向必须相反才允许零权重（hc3 %+.2f / cred %+.2f）"
+                        % (hc3_diff, cred_diff))
+        rule = next(r for r in LEDGER["rules"] if r["tag"] == "[翻译腔]")
+        self.assertEqual(rule["kind"], "observation")
+        self.assertTrue(str(rule["weight"]).startswith("0"))
+
+    def test_isomorphism_leans_ai_but_human_classics_also_trigger(self):
+        def density(path):
+            runs2, _, total = LINT.isomorphism_runs(body_of(path))
+            return len(runs2) * 100.0 / total if total else 0.0
+
+        cred_diff = mean([a - h for h, a in ((density(x), density(y)) for x, y in cred_pairs())])
+        self.assertGreater(cred_diff, 0.0, "cred 上两句同构应偏 AI（实得 %+.2f）" % cred_diff)
+        classic = max(density(p) for p in (ROOT / "tests" / "corpus_classic").glob("*.md"))
+        self.assertGreater(classic, 4.0,
+                           "人类经典同样高频触发（实测最高 %.1f 组/百句），所以只能零权重" % classic)
+        rule = next(r for r in LEDGER["rules"] if r["tag"] == "[相邻同构]")
+        self.assertEqual(rule["kind"], "observation")
+        self.assertTrue(str(rule["weight"]).startswith("0"))
+
     def test_worst_case_direction_is_not_reversed(self):
         """整篇加权分不得出现"人类显著更高"的反向；否则整套权重失去意义。"""
         pairs = [(LINT.evaluate(h.read_text(encoding="utf-8-sig"))[2],

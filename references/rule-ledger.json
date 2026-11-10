@@ -1,6 +1,6 @@
 {
-  "skill_version": "0.53",
-  "ruleset_version": "0.44",
+  "skill_version": "0.54",
+  "ruleset_version": "0.45",
   "scope": "中文/声明英文的静态词表与结构启发式；不判作者身份、不预测外部检测",
   "genre_skips": {
     "general": [],
@@ -556,6 +556,32 @@
         "text": "操作人员先清点库存，再核对登记簿上的日期与签名。Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. ",
         "genre": "general",
         "language": "mixed",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[翻译腔]",
+      "kind": "observation",
+      "weight": "0（v0.45 起观察）",
+      "evidence": "hc3 12 对 δ=+0.10（AI 3.02 vs 人类 2.26 处/千字）、cred 30 对 δ=-0.03（人类 1.69 vs AI 0.87）→ 两套语料方向相反，v0.45 零权重，只报计数与族名。",
+      "probe": {
+        "text": "值得注意的是，这类流程在某种程度上被认为是效率提升的关键。当团队需要在较短的时间内完成更多任务的时候，往往会先进行一轮评估，并且在此基础上作出调整。对于一线人员来说，这样的改变在某种程度上减少了重复劳动，但是如果缺少配套说明的话，也很容易带来新的困惑。因此，需要指出的是，流程本身并不能代替判断，并且需要在实践中不断校正，使得各项安排能够真正落到具体的人身上。",
+        "genre": "general",
+        "language": "auto",
+        "fingerprint": false,
+        "candidates": false
+      }
+    },
+    {
+      "tag": "[相邻同构]",
+      "kind": "observation",
+      "weight": "0（v0.45 起观察）",
+      "evidence": "两句同构 hc3 12 对 δ=+0.15、cred 30 对 δ=+0.33（偏 AI），三句同构 δ=0.00/+0.03（方向不成立）；但人类经典同样触发（鲁迅演讲 9.7 组/百句、《荷塘月色》4.3 组/百句）→ 零权重，只标位置。",
+      "probe": {
+        "text": "交接在每天傍晚进行。团队先把原始记录整理成表格，再把表格交给复核人逐项核对。复核人先比对日期与签名，再把疑点写成清单交给值班主管。值班主管先确认清单的次序，再把结论抄进当日的交接记录。末尾那句不参与统计，只用来补足篇幅。",
+        "genre": "general",
+        "language": "auto",
         "fingerprint": false,
         "candidates": false
       }

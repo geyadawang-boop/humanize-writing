@@ -3,6 +3,7 @@
 
 用法:
     python ai_smell_lint.py 文章.md [更多文件...]
+    python ai_smell_lint.py 稿子目录/            # 递归 .md/.txt，逐文件报告 + 汇总
     python ai_smell_lint.py -                     # 从 stdin 读取
     python ai_smell_lint.py --json 文章.md        # 输出 JSON（便于集成）
     python ai_smell_lint.py --language en -       # 显式声明英文；auto不自动识别语言
@@ -28,6 +29,10 @@
            与 [段首序数] 改为零权重观察——人类每千字 2.45 处、AI 0.06 处，罚次数
            方向相反；[AI 词] 方向成立但样本小，保留权重并登记证据；[段落开头] 在
            hc3 上方向成立，保留。规则台账见 references/rule-ledger.json。
+    v0.54（规则集 0.45）：新增 [翻译腔] 与 [相邻同构] 两条零权重计数（分母分别是
+           千汉字与句数）；同一配对语料实测整族方向不成立或人类经典同样高频，
+           故只报位置、不计分。支持目录参数，递归 .md/.txt 并输出汇总行。
+           改前/改后对比报告见 scripts/compare_report.py。
     不能用跨版本降分证明改稿收益。
     文体门控按 GENRE_SKIPS 逐文体关闭检查项：tech/academic/official 关闭全部结构类
     检查（该类文体本就需要平行结构与统一句式）；law 关闭短句/顿号连排/冒号列表/
@@ -46,11 +51,12 @@
 指标依据见 references/detection-principles.md，规则编号见 references/quick-reference.md。
 """
 import json
+import os
 import re
 import statistics
 import sys
 
-RULESET_VERSION = "0.44"
+RULESET_VERSION = "0.45"
 
 for stream in (sys.stdout, sys.stderr):
     try:
@@ -194,6 +200,46 @@ SYN_GROUPS = (
     ("重要", "关键", "核心", "至关重要"),
 )
 CANDIDATE_LIMIT = 3
+
+# v0.54 翻译腔标记族：可在中文里跑的词形计数，分母是千汉字。本项目 12 对 hc3 + 30 对
+# cred 同题配对实测，整族方向在两套语料上相反（hc3 δ +0.10、cred δ -0.03），单族样本
+# 更小，故只报计数、不计分，也不设目标频率。
+TRANSLATIONESE = (
+    ("抽象被动", re.compile(r"被(?:认为|视为|称为|看作|当作|赋予|应用于|用作|认定)")),
+    ("受到…的", re.compile(r"受到[^，。；]{0,12}的(?:关注|重视|影响|挑战|批评|青睐)")),
+    ("形式主语", re.compile(r"(?:值得注意|需要指出|有必要指出|可以说|不可否认|显而易见)的?是")),
+    ("存在着/有着", re.compile(r"(?:存在着|有着)")),
+    ("当…的时候", re.compile(r"当[^，。；]{2,20}(?:的时候|之时)[，,]")),
+    ("在…过程中", re.compile(r"在[^，。；]{2,20}(?:的过程中|的情况下|的背景下)")),
+    ("如果…的话", re.compile(r"如果[^，。；]{2,20}的话")),
+    ("并且/而且", re.compile(r"(?:并且|而且)")),
+    ("轻动词", re.compile(r"(?:进行|作出|给予|予以)了?[^，。；]{0,8}(?:分析|研究|调整|优化|评估|讨论|处理|检查|梳理)")),
+    ("不仅仅", re.compile(r"(?:不仅仅是|远不止|不过是|无非是)")),
+    ("正是/恰恰是", re.compile(r"(?:正是|恰恰是)")),
+    ("复数硬译", re.compile(r"(?:一系列|各种各样|诸多|众多的)")),
+    ("程度直译", re.compile(r"(?:在某种程度上|一定程度上|从某种意义上|在很大程度上|相对而言|总体而言)")),
+    ("句首连接词", re.compile(r"(?:^|[\n。！？])\s*(?:然而|因此|此外|与此同时|换言之|总而言之|另外)[，,]")),
+    ("前置话题壳", re.compile(r"(?:对于[^，。；]{2,15}来说|对[^，。；]{2,15}而言|在[^，。；]{2,12}方面)")),
+    ("扮演角色", re.compile(r"(?:扮演|承担)了?[^，。；]{0,8}角色")),
+    ("以一种…方式", re.compile(r"以一种[^，。；]{2,12}的(?:方式|形式)")),
+    ("使得…能够", re.compile(r"使得?[^，。；]{0,10}(?:能够|可以)")),
+    ("长前置定语", re.compile(r"[一这那][个种套些][^，。、；：！？\n]{15,}的[\u4e00-\u9fff]{2,5}")),
+    ("的…的…的", re.compile(r"的[^，。；]{1,8}的[^，。；]{1,8}的")),
+)
+
+# v0.54 相邻句同构：段内连续 n 句的「逗号数 + 冒号有无 + 长度档」完全一致。只算不带
+# 比喻/比拟标记的句子——带比喻的并列是修辞，人类经典散文里本就密集。
+# 配对语料上两句同构偏 AI（hc3 δ +0.15、cred δ +0.33），三句同构方向不成立
+# （δ 0.00/+0.03）；人类经典同样触发（鲁迅演讲 9.7 组/百句、《荷塘月色》4.3 组/百句），
+# 说明它标记的是「整齐并列」而不是来源，故零权重。
+ISO_MIN_LEN = 16
+ISO_LEN_BUCKET = 12
+ISO_FIGURATIVE = re.compile(r"像|仿佛|好似|宛如|如同|犹如|似的|一般|一样|般|恰似|宛然")
+
+# 目录输入：只收纯文本类扩展名，跳过隐藏目录与缓存目录（.git/__pycache__），
+# 递归顺序固定，保证同一目录两次运行输出一致。
+TEXT_EXTS = (".md", ".markdown", ".txt", ".text")
+SKIP_DIRS = {"__pycache__", "node_modules", ".git", ".svn", ".hg"}
 
 SENT_SPLIT = re.compile(r"[。！？!?；;…]+")
 DUNHAO_RUN = re.compile(r"(?:[^、，。？！\s]{1,10}、){3,}[^、，。？！\s]{1,10}")
@@ -512,6 +558,90 @@ def semantic_candidates(text):
     return out
 
 
+def translationese_observations(body):
+    """翻译腔标记族的词形计数（零权重）。
+
+    只报每千字频率与命中族名，不给目标值；整族在本项目配对语料上方向不成立，
+    所以计数高低都不能单独当成改写理由。
+    """
+    total = chinese_len(body)
+    if total < MIN_CHARS:
+        return []
+    hits = [(name, len(rx.findall(body))) for name, rx in TRANSLATIONESE]
+    hits = [(name, n) for name, n in hits if n]
+    if not hits:
+        return []
+    count = sum(n for _, n in hits)
+    shown = "、".join("%s %d" % (name, n) for name, n in hits[:8])
+    return [
+        (0, "[翻译腔] 标记合计 %d 处（%.2f/千字）：%s%s → 只报计数；某族出现多次时核读"
+               "是否绕开了动作主体、或用抽象名词代替了具体关系"
+            % (count, count * 1000.0 / total, shown, "…" if len(hits) > 8 else "")),
+        (0, "[翻译腔] 本项目两套配对语料方向相反：hc3 人类 2.26、AI 3.02 处/千字（δ +0.10），"
+               "cred 人类 1.69、AI 0.87（δ -0.03）；整族不计分、不设目标频率。次数少不等于没有翻译腔，"
+               "次数多也不是 AI 证据"),
+    ]
+
+
+def _iso_signature(sent):
+    """句子结构指纹：逗号数、有无冒号、长度档。只是骨架近似，不等于句法分析。"""
+    return (sent.count("，"), ("：" in sent or ":" in sent), chinese_len(sent) // ISO_LEN_BUCKET)
+
+
+def isomorphism_runs(body):
+    """返回 (两句同构位置, 三句同构位置, 句数)；不适合结构统计时句数为 0。
+
+    单独暴露计数，供规则台账、方向测试与对比报告复用，避免各处各算一遍。
+    """
+    if is_list_or_table(body):
+        return [], [], 0
+    sents_all = sentences(body)
+    if chinese_len(body) < MIN_CHARS:
+        return [], [], 0
+    lines = [ln for ln in body.split("\n") if chinese_len(ln.strip()) >= 2]
+    if len(lines) >= 8 and len(sents_all) * 3 <= len(lines):
+        return [], [], 0  # 分行文本：句子跨行连读，段内切句不成立
+    runs2, runs3 = [], []
+    for pi, para in enumerate(raw_paragraphs(body), 1):
+        ss = [x.strip() for x in SENT_SPLIT.split(para) if chinese_len(x.strip()) >= ISO_MIN_LEN]
+        for i in range(len(ss) - 1):
+            run = ss[i:i + 2]
+            sig = [_iso_signature(x) for x in run]
+            if sig[0] == sig[1] and sig[0][0] >= 1 and not any(ISO_FIGURATIVE.search(x) for x in run):
+                runs2.append("第%d段第%d句起" % (pi, i + 1))
+        for i in range(len(ss) - 2):
+            run = ss[i:i + 3]
+            sig = [_iso_signature(x) for x in run]
+            if len(set(sig)) == 1 and sig[0][0] >= 1 and not any(ISO_FIGURATIVE.search(x) for x in run):
+                runs3.append("第%d段第%d句起" % (pi, i + 1))
+    return runs2, runs3, len(sents_all)
+
+
+def isomorphism_observations(body):
+    """相邻句同构的计数与位置（零权重）。
+
+    分母是句数而不是字数：结构类指标的样本单位是同类元素，按字数算会被篇幅带偏。
+    比喻句不参与，避免把人类散文的骈散并列算成骨架复读。
+    """
+    runs2, runs3, total = isomorphism_runs(body)
+    if not runs2 and not runs3:
+        return []
+    total = total or 1
+    out = []
+    if runs2:
+        out.append((0, "[相邻同构] 连续两句结构同款 %d 组（%.1f/百句）：%s → 只标位置；同款指"
+                       "逗号数、冒号有无与长度档一致，不等于句法相同"
+                    % (len(runs2), len(runs2) * 100.0 / total, "、".join(_sample(runs2)))))
+    if runs3:
+        out.append((0, "[相邻同构] 连续三句结构同款 %d 组（%.1f/百句）：%s → 只标位置；三项同款"
+                       "在本项目配对语料上方向不成立（δ 0.00/+0.03），不作改写依据"
+                    % (len(runs3), len(runs3) * 100.0 / total, "、".join(_sample(runs3)))))
+    out.append((0, "[相邻同构] 不计分：两句同构在配对语料上偏 AI（hc3 δ +0.15、cred δ +0.33），"
+                   "但人类经典同样触发（鲁迅演讲 9.7 组/百句、《荷塘月色》4.3 组/百句），"
+                   "测的是「整齐并列」而不是来源；有功能的排比、术语并列和文体节奏保留"))
+    return out
+
+
 def check(text, genre="general", language="auto"):
     issues = []
 
@@ -717,6 +847,10 @@ def check(text, genre="general", language="auto"):
     density = anchors / (total / 300)
     add(0, "[锚点] 正则匹配 %d 处、密度 %.1f / 300 中文字（仅观察，不设密度目标）→ 匹配数不代表真实、具体或有叙事作用；按材料与文体核读必要细节，不为密度添加或删除数字、时间、地名；数值精度与不确定性须保留" % (anchors, density))
 
+    # v0.54：两类新信号都只报计数，权重恒为 0（方向依据见常量处注释与规则台账）。
+    issues.extend(translationese_observations(body))
+    issues.extend(isomorphism_observations(body))
+
     return issues, "ok"
 
 
@@ -755,6 +889,30 @@ def label_of(score, status):
     if score <= PASS_LINE:
         return "静态命中适中"
     return "静态命中较多"
+
+
+def expand_inputs(paths):
+    """把目录参数展开成文件列表；返回 (文件列表, 空目录列表, 是否含目录)。
+
+    单文件与 stdin 的行为不变；目录只递归收 .md/.txt 类纯文本，便于一次扫描整批稿子。
+    """
+    files, empty, had_dir = [], [], False
+    for p in paths:
+        if p != "-" and os.path.isdir(p):
+            had_dir = True
+            found = []
+            for root, dirs, names in os.walk(p):
+                dirs[:] = sorted(d for d in dirs
+                                 if not d.startswith(".") and d not in SKIP_DIRS)
+                for name in sorted(names):
+                    if name.lower().endswith(TEXT_EXTS):
+                        found.append(os.path.join(root, name))
+            if not found:
+                empty.append(p)
+            files.extend(found)
+        else:
+            files.append(p)
+    return files, empty, had_dir
 
 
 def main(argv):
@@ -807,10 +965,15 @@ def main(argv):
     if language not in LANGUAGES:
         print("未知 --language: %s（可选: %s）" % (language, "/".join(LANGUAGES)), file=sys.stderr)
         return 2
+    files, empty_dirs, had_dir = expand_inputs(paths)
+    for d in empty_dirs:
+        print("目录内没有可读的 %s 文件: %s" % ("/".join(TEXT_EXTS), d), file=sys.stderr)
+        return 2
     results = []
     verdict = "pass"
+    tally = {"fail": 0, "short": 0, "pass": 0}
 
-    for p in paths:
+    for p in files:
         try:
             text = read_text(p)
         except (OSError, UnicodeError) as exc:
@@ -833,9 +996,14 @@ def main(argv):
             "issues": [{"weight": w, "message": m} for w, m in issues],
         })
         if status == "ok" and score > PASS_LINE:
+            tally["fail"] += 1
             verdict = "fail"
-        elif status != "ok" and verdict != "fail":
-            verdict = "short"
+        elif status != "ok":
+            tally["short"] += 1
+            if verdict != "fail":
+                verdict = "short"
+        else:
+            tally["pass"] += 1
 
     if as_json:
         print(json.dumps(results, ensure_ascii=False, indent=2))
@@ -849,6 +1017,9 @@ def main(argv):
                 w = item["weight"]
                 m = item["message"]
                 print("  %s%3s  %s" % ("-" if w else " ", w if w else "", m))
+        if had_dir:
+            print("\n目录汇总：%d 个文件，超阈值 %d、无法判定 %d、未超阈值 %d"
+                  % (len(results), tally["fail"], tally["short"], tally["pass"]))
 
     return {"fail": 1, "short": 2}.get(verdict, 0)
 

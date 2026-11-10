@@ -68,7 +68,11 @@
 
 ```text
 python -B <skill>/scripts/ai_smell_lint.py --genre academic --json <file>
+python -B <skill>/scripts/ai_smell_lint.py 稿子目录/
+python -B <skill>/scripts/compare_report.py 改前.md 改后.md --format html --out 对比.html
 ```
+
+目录参数递归 `.md/.txt`，逐文件报告并在末尾给汇总行。改稿需要留档时用 compare_report 生成指标表、分级清单与逐段标红；它不替代文本评阅，分数差也不能单独证明改稿收益。
 
 支持 general、tech、academic、official、law、email、speech、fiction。按文本实际功能选；不为降低分数改选 genre。不存在 screenplay/poetry 模式，不把它们伪称已校准。
 
