@@ -33,15 +33,22 @@
            千汉字与句数）；同一配对语料实测整族方向不成立或人类经典同样高频，
            故只报位置、不计分。支持目录参数，递归 .md/.txt 并输出汇总行。
            改前/改后对比报告见 scripts/compare_report.py。
+    v0.59（规则集 0.46）：词表类信号改为频率门——单次命中只输出零权重定位行，
+           同词 ≥2 次才计分；同一篇 ≥3 种不同套话且 ≥2 种/千字（英文千词）按
+           「套话簇」计 min(16, 4×种数)。总结/展望/抽象名词化/顿号连排均需 ≥2 处，
+           [AI 句式] 与 [程度用语] 改按千字密度取阈。文体豁免常规用词（学术、公文、
+           演讲、小说、英文 tech/academic/official）。
     不能用跨版本降分证明改稿收益。
     文体门控按 GENRE_SKIPS 逐文体关闭检查项：tech/academic/official 关闭全部结构类
     检查（该类文体本就需要平行结构与统一句式）；law 关闭短句/顿号连排/冒号列表/
-    段落开头/总结式结尾；fiction 只关段落开头；speech 只关路标词；email 同 general。
+    段落开头/总结式结尾；fiction 关闭段落开头与程度用语（程度副词常承担人物声口）；
+    speech 关闭路标词/顿号连排/总结式结尾/展望式收尾（致辞结尾的祝愿属文体功能）；
+    email 同 general。
     豁免清单仅参考 tests/corpus/ 四篇历史设计样本，不构成各文体充分标定（出处见 corpus/SOURCES.md）。
-    四字套话连缀/段首序数/展望式收尾（v0.20）/文艺比喻/抽象名词化/礼貌框架
-    （v0.23）全文体生效，不进豁免清单；段内枚举（v0.23）进 tech/academic/
-    official 豁免清单——"一是…二是…"式平行编号是技术规范与公文的常规结构
-    （TECH_SPEC 即设计样本，见 tests/selftest.py ⑬）。
+    四字套话连缀/段首序数/文艺比喻/抽象名词化/礼貌框架全文体生效，不进豁免清单
+    （展望式收尾自 v0.59 起对 speech 关闭，其余文体仍生效）；段内枚举（v0.23）进
+    tech/academic/official 豁免清单——"一是…二是…"式平行编号是技术规范与公文的
+    常规结构（TECH_SPEC 即设计样本，见 tests/selftest.py ⑬）。
     四字套话按密度判（≥3 处且 ≥2 对/300 字）；法律等文体的术语性并列可能合理，
     命中后仍需按语境判断，不保证豁免。
 退出码:
@@ -51,12 +58,13 @@
 指标依据见 references/detection-principles.md，规则编号见 references/quick-reference.md。
 """
 import json
+import math
 import os
 import re
 import statistics
 import sys
 
-RULESET_VERSION = "0.45"
+RULESET_VERSION = "0.46"
 
 for stream in (sys.stdout, sys.stderr):
     try:
@@ -88,8 +96,8 @@ GENRE_SKIPS = {
     "official": ("句长", "短句", "路标词", "顿号连排", "冒号列表", "总结式结尾", "段落均匀", "段落开头", "段内枚举"),
     "law": ("短句", "顿号连排", "冒号列表", "段落开头", "总结式结尾"),
     "email": (),
-    "speech": ("路标词",),
-    "fiction": ("段落开头",),
+    "speech": ("路标词", "顿号连排", "总结式结尾", "展望式收尾"),
+    "fiction": ("段落开头", "程度用语"),
 }
 GENRES = tuple(GENRE_SKIPS)
 LANGUAGES = ("auto", "zh", "en", "mixed")
@@ -106,6 +114,21 @@ STRONG_WORDS = [
     "未来可期", "拭目以待", "机遇与挑战并存", "遇见更好的自己",
     "唯有如此",
 ]
+# v0.59：词表信号只做频率筛查，不按单次命中计分。下列词在对应文体里属常规用语，
+# 不参与该文体的命中统计；其余文体照常计数，仍需达到 STRONG_WORD_MIN 才计分。
+STRONG_WORD_MIN = 2
+# 单次命中的套话不计分，但同一篇里不同套话堆到一定浓度仍是模板信号：
+# 种类 ≥3 且 ≥2 种/千字才计分，权重 min(16, 4×种数)（比单词复读的上限 12 略高，
+# 因为它是成片的模板而非一个词的口头禅）。330 字的 AI 段落常出现 4 种；2000 字
+# 长文里三种零星套话只有 1.5 种/千字，属于正常写作，不算。
+STRONG_WORD_KINDS = 3
+STRONG_WORD_KINDS_DENSITY = 2.0
+STRONG_WORD_EXEMPT = {
+    "academic": ("众所周知", "值得注意的是", "不可或缺", "至关重要", "深远影响", "凸显", "诠释"),
+    "official": ("至关重要", "不可或缺", "全面提升", "持续优化", "系统性", "全方位", "深耕"),
+    "fiction": ("恰似",),
+    "speech": ("未来可期", "拭目以待", "遇见更好的自己", "唯有如此"),
+}
 ROAD_WORDS = ["首先", "其次", "再次", "最后", "与此同时", "一方面", "另一方面"]
 ABSOLUTE_WORDS = ["全面", "彻底", "非常", "十分", "极其", "尤为"]
 # Narrow quantity/time exclusions; this remains a lexical heuristic, not parsing.
@@ -129,14 +152,31 @@ EN_PHRASES = [
     "consequently", "that being said", "last but not least",
     "when it comes to", "a wide range of", "in the realm of",
 ]
+# v0.59：英文词表同样改频率门；技术/学术/公文里属常规用词者按文体豁免。
+EN_PHRASE_MIN = 2
+EN_PHRASE_KINDS = 3
+EN_PHRASE_KINDS_DENSITY = 2.0   # 种/千词
+EN_PHRASE_EXEMPT = {
+    "tech": ("crucial", "robust", "leverage", "landscape", "harness", "streamline",
+             "nuanced", "multifaceted", "intricate", "seamless"),
+    "academic": ("crucial", "robust", "leverage", "landscape", "harness", "streamline",
+                 "nuanced", "multifaceted", "intricate", "seamless", "foster",
+                 "moreover", "furthermore", "additionally", "subsequently", "consequently",
+                 "in conclusion", "it is important to note"),
+    "official": ("crucial", "robust", "leverage", "landscape", "harness", "streamline"),
+}
 PATTERNS = {
     "不是…而是…": r"不是[^，。？！]{1,20}，?而是",
     "不仅…还/更…": r"不仅[^。？！]{1,30}(?:还|也|更|而且)",
-    "一方面…另一方面": r"一方面[^。]{1,40}另一方面",
     "随着…的发展": r"随着[^，。]{1,20}的(?:发展|进步|推进|深入)",
     "在当今…时代": r"在(?:当今|当下|当前|这个)[^，。]{0,12}(?:社会|时代|背景下)",
 }
+# v0.59：句式密度系数（处/千字），阈值 = max(2, ceil(千字 × 系数))。并列递进式
+# （不仅…还）在论证文里本属正常连接手段，准入放宽到 1.5；背景铺垫式（随着…、
+# 在当今…）留 1.0。系数只决定「算不算复读」，不改变命中后的权重。
+PATTERN_DENSITY = {"不仅…还/更…": 1.5, "随着…的发展": 1.0, "在当今…时代": 1.0}
 SUMMARY_STARTS = ["综上所述", "综上", "总而言之", "总之", "由此可见", "可见"]
+SUMMARY_RE = re.compile("|".join(sorted(SUMMARY_STARTS, key=len, reverse=True)))
 EN_MIN_WORDS = 100
 EN_SUMMARY_STARTS = ["in conclusion", "in summary", "to sum up", "to conclude", "in short", "all in all"]
 FOUR_CHAR_PAIR = re.compile(r"[\u4e00-\u9fff]{4}、[\u4e00-\u9fff]{4}(?![\u4e00-\u9fff、])")
@@ -343,32 +383,71 @@ def ascii_word_len(body):
     return len(re.findall(r"[A-Za-z][A-Za-z'-]*", body))
 
 
-def chinese_word_issues(body):
-    """同一中文词表在所有有效输入上使用同一权重。"""
-    return [
-        (min(12, 4 * body.count(w)),
-         "[AI 词] '%s' × %d → 核对是否空泛或冗余；专业术语、引文、定义和必要重复保留，不为降分删除" % (w, body.count(w)))
-        for w in STRONG_WORDS if w in body
-    ]
+def chinese_word_issues(body, genre="general"):
+    """词表信号只做频率筛查：单次命中不计分；对应文体里的常规词不参与统计。"""
+    exempt = STRONG_WORD_EXEMPT.get(genre, ())
+    hits = [(w, body.count(w)) for w in STRONG_WORDS if w not in exempt]
+    hits = [(w, n) for w, n in hits if n]
+    issues = []
+    repeated = [(w, n) for w, n in hits if n >= STRONG_WORD_MIN]
+    for w, n in repeated:
+        issues.append((min(12, 4 * n),
+                       "[AI 词] '%s' × %d（≥%d）→ 核对是否空泛或冗余；专业术语、引文、定义和必要重复保留，不为降分删除" % (w, n, STRONG_WORD_MIN)))
+    if not repeated and len(hits) >= STRONG_WORD_KINDS:
+        kinds = len(hits)
+        density = kinds * 1000.0 / max(chinese_len(body), 1)
+        if density >= STRONG_WORD_KINDS_DENSITY:
+            return [(min(16, 4 * kinds),
+                     "[AI 词] 不同套话 %d 种（%s；各 1 次，%.1f 种/千字）→ 核对是否空泛或冗余；"
+                     "专业术语、引文、定义和必要重复保留，不为降分删除"
+                     % (kinds, "、".join(w for w, _ in hits[:6]), density))]
+    if not repeated and hits:
+        issues.append((0, "[AI 词] 单次命中 %s（各 1 次，不计分）→ 只作定位；"
+                          "正常写作也会偶用这些词，不必为降分逐字替换"
+                       % "、".join("'%s'" % w for w, _ in hits[:8])))
+    return issues
 
 
 ENGLISH_ISSUE_TAGS = ("[英文 AI 词]", "[英文总结式结尾]")
 
 
-def english_issues(body, skips):
-    """英文信号的唯一计分路径，避免中文达到门槛时重复定义权重。"""
+def english_issues(body, skips, genre="general"):
+    """英文信号的唯一计分路径：同样按频率门计分，单次命中不计分。"""
     found = []
+    exempt = EN_PHRASE_EXEMPT.get(genre, ())
+    hits = []
     for w in EN_PHRASES:
+        if w in exempt:
+            continue
         n = len(re.findall(r"\b" + re.escape(w) + r"\b", body, flags=re.I))
         if n:
-            found.append((min(10, 2 * n),
-                          "[英文 AI 词] '%s' × %d → 核对语境与具体含义；术语、引文和必要重复保留" % (w, n)))
+            hits.append((w, n))
+    repeated = [(w, n) for w, n in hits if n >= EN_PHRASE_MIN]
+    for w, n in repeated:
+        found.append((min(10, 2 * n),
+                      "[英文 AI 词] '%s' × %d（≥%d）→ 核对语境与具体含义；术语、引文和必要重复保留" % (w, n, EN_PHRASE_MIN)))
+    if not repeated and len(hits) >= EN_PHRASE_KINDS:
+        kinds = len(hits)
+        density = kinds * 1000.0 / max(ascii_word_len(body), 1)
+        if density >= EN_PHRASE_KINDS_DENSITY:
+            found.append((min(10, 3 * kinds),
+                          "[英文 AI 词] 不同套话 %d 种（%s；各 1 次，%.1f 种/千词）→ 核对语境与具体含义；"
+                          "术语、引文和必要重复保留"
+                          % (kinds, ", ".join(w for w, _ in hits[:6]), density)))
+    if not repeated and hits:
+        found.append((0, "[英文 AI 词] 单次命中 %s（各 1 次，不计分）→ 只作定位；正常写作也会偶用"
+                       % ", ".join("'%s'" % w for w, _ in hits[:8])))
     if "总结式结尾" not in skips:
         tail_body = ending_paragraphs(body)
         tail_en = tail_body[-1][-220:].lower() if tail_body else ""
         hit = next((s for s in EN_SUMMARY_STARTS if s in tail_en), None)
         if hit:
-            found.append((8, "[英文总结式结尾] 末段出现 '%s' → 核对是否重复；必要总结保留" % hit))
+            # v0.59：与中文一致，全文 ≥2 处总结路标才计分；单处只观察。
+            n_sum = sum(len(re.findall(re.escape(s), body, flags=re.I)) for s in EN_SUMMARY_STARTS)
+            if n_sum >= 2:
+                found.append((8, "[英文总结式结尾] 末段出现 '%s'、全文总结路标 × %d → 核对是否重复；必要总结保留" % (hit, n_sum)))
+            else:
+                found.append((0, "[英文总结式结尾] 末段出现 '%s'（全文 1 处，不计分）→ 必要收束保留" % hit))
     return found
 
 
@@ -695,8 +774,8 @@ def check(text, genre="general", language="auto"):
                "中文结构样本不足；ASCII词形不是英文语言识别，也没有跨语言校准。" % (mode, total, en_words))
         if limited:
             add(0, "[语言范围] auto 不识别实际语言；英文或中英混语请显式指定 --language en 或 --language mixed，声明不代表系统验证")
-        issues.extend(chinese_word_issues(body))
-        issues.extend(english_issues(body, skips))
+        issues.extend(chinese_word_issues(body, genre))
+        issues.extend(english_issues(body, skips, genre))
         return issues, "limited" if limited else "ok"
 
     add(0, "[概览] " + note)
@@ -721,7 +800,7 @@ def check(text, genre="general", language="auto"):
         short_ratio = sum(1 for L in lens if 3 <= L <= 8) / len(lens)
         add(0, "[短句] 3-8 字短句占比 %.0f%%（仅观察，不设合格比例）→ 核读动作、因果、指代是否被停顿切断；仅在影响阅读时合并或拆分，不为比例添情节；对白、诗歌、剧本拍点及有意简练按功能保留" % (short_ratio * 100))
 
-    issues.extend(chinese_word_issues(body))
+    issues.extend(chinese_word_issues(body, genre))
     if "路标词" not in skips:
         road = sum(body.count(w) for w in ROAD_WORDS)
         if road:
@@ -734,25 +813,36 @@ def check(text, genre="general", language="auto"):
             len(novel_hits), "、".join(novel_hits[:4])))
     elif len(novel_hits) == 2:
         add(3, "[常见小说表达] 命中 2 种（%s）→ 按视角与人物声口核读；确有空泛问题时再改，不统一替换为身体动作" % "、".join(novel_hits))
-    for w in ABSOLUTE_WORDS:
-        n = count_degree_word(body, w)
-        if n >= 3:
-            add(4, "[程度用语] '%s' × %d（≥3）→ 核对词义及证据是否支持；数量、术语和有依据的确定表述保留，不自动弱化" % (w, n))
-    issues.extend(english_issues(body, skips))
+    # v0.59：程度用语按千字密度取阈值（2 处/千字，下限 3），单次或零星使用不构成线索；
+    # 记叙文的程度副词常承担人物声口（fiction 已在 GENRE_SKIPS 关闭）。
+    degree_min = max(3, math.ceil(total / 1000.0 * 2))
+    if "程度用语" not in skips:
+        for w in ABSOLUTE_WORDS:
+            n = count_degree_word(body, w)
+            if n >= degree_min:
+                add(4, "[程度用语] '%s' × %d（≥%d）→ 核对词义及证据是否支持；数量、术语和有依据的确定表述保留，不自动弱化" % (w, n, degree_min))
+    issues.extend(english_issues(body, skips, genre))
 
+    # v0.59：句式信号按千字密度取阈值——长文里偶发一处不是复读；短文仍要 ≥2 次。
+    # 密度系数见常量注释：并列递进式（不仅…还）比背景铺垫式（随着/在当今）准入更松。
     for name, pat in PATTERNS.items():
         n = len(re.findall(pat, body))
-        limit = 1 if name == "不是…而是…" else 2
-        if n > limit:
-            if name == "不是…而是…":
+        if name == "不是…而是…":
+            if n > 1:
                 add(0, "[对照句式] '%s' × %d（仅定位复读）→ 核对否定项的依据及两项是否可并存；真实纠错、必要比较、引用和人物争执按功能保留，静态次数不能判断拉踩" % (name, n))
-            else:
-                add(5, "[AI 句式] '%s' × %d（>%d）→ 核对是否机械重复；有功能的强调、论证关系和人物声口保留，不因次数自动改写" % (name, n, limit))
+            continue
+        scale = PATTERN_DENSITY.get(name, 1.0)
+        limit = max(2, math.ceil(total / 1000.0 * scale))
+        if n >= limit:
+            add(5, "[AI 句式] '%s' × %d（≥%d）→ 核对是否机械重复；有功能的强调、论证关系和人物声口保留，不因次数自动改写" % (name, n, limit))
 
     if "顿号连排" not in skips:
+        # v0.59：单处四项连排是正常列项；≥2 处才计分，单处只定位。
         runs = DUNHAO_RUN.findall(body)
-        if runs:
+        if len(runs) >= 2:
             add(min(8, 4 * len(runs)), "[顿号连排] ≥4 项连排 × %d 处，例：'%s…' → 核对并列是否清楚；术语、完整列项和修辞节奏保留，仅在阅读受阻时调整" % (len(runs), runs[0][:24]))
+        elif runs:
+            add(0, "[顿号连排] ≥4 项连排 1 处，例：'%s…'（单处不计分）→ 核对并列是否清楚；术语与完整列项保留" % runs[0][:24])
     if "冒号列表" not in skips:
         colon_lists = COLON_LIST.findall(body)
         if len(colon_lists) >= 2:
@@ -784,9 +874,22 @@ def check(text, genre="general", language="auto"):
         add(0, "[文艺比喻] 明喻 %d 处、密度 %.1f/300 字（<1.0）→ 未超过本规则密度阈值，修辞质量仍需读稿" % (len(similes), sim_density))
 
     # v0.23 信号 B：抽象名词化（族内只报一次，不按处数加罚）
-    nom_hit = next((m.group(0) for pat in NOMINAL_RES for m in [pat.search(body)] if m), None)
-    if nom_hit:
-        add(5, "[抽象名词化] '%s' → 核对是否空泛；准确概念、必要概述和内心叙述保留，不强制转成动作或补造感官细节" % nom_hit)
+    # v0.59：单处「一种…」可能只是正常限定，改成 ≥2 处才计分；同族重叠命中先合并再计数。
+    spans = []
+    for pat in NOMINAL_RES:
+        for m in pat.finditer(body):
+            spans.append((m.start(), m.end(), m.group(0)))
+    spans.sort()
+    nom_hits = []
+    for s, e, g in spans:
+        if nom_hits and s < nom_hits[-1][1]:
+            nom_hits[-1] = (nom_hits[-1][0], max(nom_hits[-1][1], e), nom_hits[-1][2])
+        else:
+            nom_hits.append((s, e, g))
+    if len(nom_hits) >= 2:
+        add(5, "[抽象名词化] '%s' 等 %d 处 → 核对是否空泛；准确概念、必要概述和内心叙述保留，不强制转成动作或补造感官细节" % (nom_hits[0][2], len(nom_hits)))
+    elif nom_hits:
+        add(0, "[抽象名词化] '%s'（单处不计分）→ 核对是否空泛；准确概念与内心叙述保留" % nom_hits[0][2])
 
     if "总结式结尾" not in skips:
         tail_body = ending_paragraphs(body)
@@ -796,7 +899,12 @@ def check(text, genre="general", language="auto"):
         if hit is None:
             hit = next((s for s in SUMMARY_STARTS if s in last[:40]), None)
         if hit:
-            add(8, "[总结式结尾] 末段以 '%s' 起头或收束 → 核对是否重复或越过证据；必要总结、人物反思和收束功能保留，不强制换成场景或动作" % hit)
+            # v0.59：一次总结是收束功能，全文 ≥2 处才算重复路标。
+            n_sum = len(SUMMARY_RE.findall(body))
+            if n_sum >= 2:
+                add(8, "[总结式结尾] 末段以 '%s' 起头或收束，全文总结路标 × %d → 核对是否重复或越过证据；必要总结、人物反思和收束功能保留，不强制换成场景或动作" % (hit, n_sum))
+            else:
+                add(0, "[总结式结尾] 末段以 '%s' 起头或收束（全文 1 处，不计分）→ 核对是否重复或越过证据；必要总结、人物反思和收束功能保留" % hit)
         else:
             add(0, "[结尾] 末段未出现总结路标 ✓")
 
@@ -806,17 +914,17 @@ def check(text, genre="general", language="auto"):
     # （此致/敬礼/署名/日期，≤6 字无标点）。
     tail_paras = [p for p in raw_paragraphs(body)
                   if not (chinese_len(p) <= 6 and not re.search(r"[。！？，,]", p))]
-    outlook_hit = None
+    outlook_hits = []
     for p in tail_paras[-3:]:
         for pat in OUTLOOK_PATTERNS:
-            m = pat.search(p)
-            if m:
-                outlook_hit = m.group(0)
-                break
-        if outlook_hit:
-            break
-    if outlook_hit:
-        add(8, "[展望式收尾] 末尾窗口出现 '%s' → 核对承诺依据与语气；真实计划、祝愿和邀请功能保留，不强制留白或补造事实" % outlook_hit)
+            for m in pat.finditer(p):
+                if m.group(0) not in outlook_hits:
+                    outlook_hits.append(m.group(0))
+    if "展望式收尾" not in skips and len(outlook_hits) >= 2:
+        # v0.59：单处祝愿/邀请是文体功能，同一结尾窗口内 ≥2 种展望套语才算堆叠。
+        add(8, "[展望式收尾] 末尾窗口出现 %d 处（%s）→ 核对承诺依据与语气；真实计划、祝愿和邀请功能保留，不强制留白或补造事实" % (len(outlook_hits), "、".join("'%s'" % h for h in outlook_hits[:3])))
+    elif outlook_hits and "展望式收尾" not in skips:
+        add(0, "[展望式收尾] 末尾窗口出现 '%s'（单处不计分）→ 核对承诺依据与语气；真实计划、祝愿和邀请功能保留" % outlook_hits[0])
 
     if "段落均匀" in skips and "段落开头" in skips:
         add(0, "[段落] %s 文体跳过段落层检测" % genre)

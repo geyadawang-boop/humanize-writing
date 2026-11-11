@@ -49,7 +49,7 @@ class CompareReportTests(unittest.TestCase):
         text = out.read_text(encoding="utf-8")
         self.assertIn("## 一、指标前后对比", text)
         self.assertIn("静态写作线索分", text)
-        self.assertIn("| 24 | 0 |", text)
+        self.assertIn("| 16 | 0 |", text)
         self.assertIn("## 二、改前命中分级清单", text)
         self.assertIn("### 加权项（需逐条核读）", text)
         self.assertIn("改后：已消失", text)

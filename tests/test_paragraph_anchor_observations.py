@@ -101,14 +101,15 @@ class ParagraphAnchorObservationTests(unittest.TestCase):
         self.assertEqual(self.result(chinese)[1], self.result(arabic)[1])
 
     def test_anchor_observation_does_not_disable_independent_word_signal(self):
-        text = CONTEXT + "这部分确实不可或缺。"
+        # v0.59：单次命中只定位；同一词 ≥2 次才计分（min(12, 4×2)=8）。
+        text = CONTEXT + "这部分确实不可或缺。那部分同样不可或缺。"
         issues, score = self.result(text)
         weighted = [(w, m) for w, m in issues if w]
         self.assertEqual(len(weighted), 1)
-        self.assertEqual(weighted[0][0], 4)
+        self.assertEqual(weighted[0][0], 8)
         self.assertIn("不可或缺", weighted[0][1])
         units = LINT.chinese_len(LINT.strip_markdown(text)) + LINT.ascii_word_len(LINT.strip_markdown(text))
-        self.assertEqual(score, round(4 * 300 / units) if units < 300 else 4)
+        self.assertEqual(score, round(8 * 300 / units) if units < 300 else 8)
 
     def test_short_input_is_still_unassessed(self):
         issues, status, _ = LINT.evaluate("北京，2把剪刀。")

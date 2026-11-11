@@ -6,7 +6,7 @@
 
 退出码 0 = 全部通过；非 0 = 有断言失败（打印明细）。
 覆盖点：
-  1. 冻结ai_heavy样本按v0.44得24分，核对剩余独立信号；v0.43 的33分含已零权重的路标词9分
+  1. 冻结ai_heavy样本按v0.59得16分（4 种套话簇），核对剩余独立信号；v0.44 的24分含单次词表与总结分
   2. 人味样本必须判"优秀"
   3. 末段"综上所述"必须被识别为总结式结尾（旧版检测位置错位，会漏报）
   4. 正常逻辑连接词"因此"结尾不得被误判为总结式结尾（旧版会误报）
@@ -151,7 +151,8 @@ OUTLOOK_POS = (
     "项目组这一年从三个人做到十个人，服务器从一台扩到四台，线上故障率降了一半还多，"
     "客服响应时间从两天缩到三个小时，工单积压从每周四百件降到五十件以内，"
     "这些都是大家一个个周末熬出来的。\n\n"
-    "相信在大家的共同努力下，我们一定能够把产品做得更好。"
+    "相信在大家的共同努力下，我们一定能够把产品做得更好。\n\n"
+    "期待明年的复盘会上与各位再次相聚。"
 )
 OUTLOOK_NEG = (
     "相信在大家的共同努力下，我们一定能够按时交付，所以先把丑话说在前面，别到时候互相埋怨。\n\n"
@@ -174,6 +175,7 @@ NOMINAL_POS = (
     "散伙饭吃完，大家在校门口拍了一张合影就散了。回到空了一半的宿舍，"
     "我把四年的东西一样一样往箱子里装，装到一半停下来坐了很久。阳台上的绿萝还是她走之前浇过水的，"
     "心里变成了一种钝钝的难过，说不出是为了什么，只觉得明天开始就不用再定七点的闹钟了。"
+    "后来那几天我一直没缓过来，日子变成了一种说不清的等待。"
 )
 NOMINAL_NEG = (
     "检查了三遍才发现是接线柱松了，拧紧之后示波器上的波形立刻稳了下来。"
@@ -217,11 +219,12 @@ def main():
     fails = []
 
     issues, status, score = lint.evaluate(SAMPLE_AI)
-    # v0.44撤回路标词9分：同一原稿24；不调整阈值来保留旧分类。
-    expected_weighted = sorted([(4, "[AI 词]")] * 4 + [(8, "[总结式结尾]")])
+    # v0.59：4 种套话各 1 次 → 套话簇 min(16, 4×4)=16，折算后仍为 16；
+    # 单处总结不再计分（v0.44 的 24 分含 4 个单词各 4 分 + 总结 8 分）。
+    expected_weighted = [(16, "[AI 词]")]
     actual_weighted = sorted((w, m.split("]", 1)[0] + "]") for w, m in issues if w)
-    if status != "ok" or score != 24 or actual_weighted != expected_weighted:
-        fails.append("① 冻结样本按v0.44应得24分并保留4个词表与总结式结尾信号，实得 score=%s status=%s weighted=%s" % (score, status, actual_weighted))
+    if status != "ok" or score != 16 or actual_weighted != expected_weighted:
+        fails.append("① 冻结样本按v0.59应得16分（套话簇16）且仅 1 个 [AI 词] 信号，实得 score=%s status=%s weighted=%s" % (score, status, actual_weighted))
 
     issues, status, score = lint.evaluate(SAMPLE_HUMAN)
     if status != "ok" or score >= lint.GOOD_LINE:
@@ -379,17 +382,19 @@ def main():
     if gen_status != "ok" or law_status != "ok":
         fails.append("⑭ LAW_SPEC 过短（general=%s law=%s），测试无效" % (gen_status, law_status))
     else:
+        if not any(m.startswith("[顿号连排]") and w for w, m in gen_issues):
+            fails.append("⑭ LAW_SPEC general 模式应命中加权 [顿号连排]（4 项连排 2 处）")
+        if not any(m.startswith("[总结式结尾]") for _, m in gen_issues):
+            fails.append("⑭ LAW_SPEC general 模式应命中 [总结式结尾] 定位行（v0.59 单处零权重）")
         for tag in ("[顿号连排]", "[总结式结尾]"):
-            if not any(m.startswith(tag) and w for w, m in gen_issues):
-                fails.append("⑭ LAW_SPEC general 模式应命中 %s（回归基线失效）" % tag)
-            if any(m.startswith(tag) and w for w, m in law_issues):
+            if any(m.startswith(tag) for _, m in law_issues):
                 fails.append("⑭ law 门控未豁免 %s: %s" % (
-                    tag, [m for w, m in law_issues if w and m.startswith(tag)]))
+                    tag, [m for _, m in law_issues if m.startswith(tag)]))
         if not any(m.startswith("[genre] law") for _, m in law_issues):
             fails.append("⑭ law 门控缺 [genre] 说明行")
         if not (any(m.startswith("[路标词]") for _, m in law_issues)
-                and any("[AI 词]" in m and w for w, m in law_issues)):
-            fails.append("⑭ law 门控应保留路标词观察行与 AI 词加权检查")
+                and any("[AI 词]" in m for _, m in law_issues)):
+            fails.append("⑭ law 门控应保留路标词观察行与 AI 词检查（单次为定位行）")
         if law_score >= gen_score:
             fails.append("⑭ law 模式风险分应低于 general，实得 law=%d general=%d"
                          % (law_score, gen_score))
@@ -461,7 +466,7 @@ def main():
         (d_ca / "ai_email_reply.md").read_text(encoding="utf-8"), genre="email")
     if ca_em_status != "ok" or not (
             any(m.startswith("[段首序数]") for _, m in ca_em_issues)
-            and all(any(m.startswith(t) and w for w, m in ca_em_issues)
+            and all(any(m.startswith(t) for _, m in ca_em_issues)
                     for t in ("[展望式收尾]", "[段内枚举]"))):
         fails.append("⑮ ai_email_reply 应命中 [段首序数] 观察行 + [展望式收尾]+[段内枚举]（status=%s）" % ca_em_status)
     if any(m.startswith("[四字套话]") and w for w, m in ca_em_issues):
@@ -469,8 +474,10 @@ def main():
     ca_sp_issues, ca_sp_status, ca_sp_score = lint.evaluate(
         (d_ca / "ai_speech_ceremony.md").read_text(encoding="utf-8"), genre="speech")
     if ca_sp_status != "ok" or not all(
-            any(m.startswith(t) and w for w, m in ca_sp_issues) for t in ("[四字套话]", "[展望式收尾]", "[段内枚举]")):
-        fails.append("⑮ ai_speech_ceremony 应命中 [四字套话]+[展望式收尾]+[段内枚举]（status=%s）" % ca_sp_status)
+            any(m.startswith(t) for _, m in ca_sp_issues) for t in ("[四字套话]", "[段内枚举]")):
+        fails.append("⑮ ai_speech_ceremony 应命中 [四字套话]+[段内枚举]（status=%s）" % ca_sp_status)
+    if any(m.startswith("[展望式收尾]") for _, m in ca_sp_issues):
+        fails.append("⑮ speech 门控应关闭 [展望式收尾]（致辞结尾的祝愿是文体功能）")
     ca_law_issues, ca_law_status, _ = lint.evaluate(
         (d_ca / "ai_law_memo.md").read_text(encoding="utf-8"), genre="law")
     if ca_law_status == "ok":
@@ -501,7 +508,7 @@ def main():
         return 1
 
     print("自测全部通过 ✓")
-    print("  冻结 ai_heavy 样本 score=%d（v0.44应 =24；v0.43 的 33 含路标词9分，不调整25/40阈值）" % lint.evaluate(SAMPLE_AI)[2])
+    print("  冻结 ai_heavy 样本 score=%d（v0.59 应 =16：4 种套话簇；v0.44 的 24 含单次词表与总结分）" % lint.evaluate(SAMPLE_AI)[2])
     print("  人味样本 score=%d（应 <%d）" % (lint.evaluate(SAMPLE_HUMAN)[2], lint.GOOD_LINE))
     print("  短文本 AI 腔 score=%d（应 >%d）" % (lint.evaluate(SAMPLE_AI_SHORT)[2], lint.PASS_LINE))
     print("  短文本人味稿 score=%d（应 <%d）" % (lint.evaluate(SAMPLE_HUMAN_SHORT)[2], lint.GOOD_LINE))

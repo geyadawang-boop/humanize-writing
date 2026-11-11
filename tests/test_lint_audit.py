@@ -32,6 +32,10 @@ TECH = "这套闭环控制装置用于调节电机转速，编号为1。传感�
 def messages(result):
     return [m for w, m in result[0] if w]
 
+def all_messages(result):
+    """含零权重观察行：v0.59 起单次命中只定位不计分，仍需可见。"""
+    return [m for _, m in result[0]]
+
 def cli(args, text=""):
     return subprocess.run([sys.executable, "-B", str(ROOT / "scripts/ai_smell_lint.py"), *args],
                           input=text, capture_output=True, text=True, encoding="utf-8", timeout=10)
@@ -134,7 +138,7 @@ class LanguageAndScore(unittest.TestCase):
         results = [lint.evaluate(en + prefix[:n], "tech", "mixed") for n in (99, 100)]
         self.assertEqual(results[0][2], results[1][2])
         for r in results:
-            self.assertTrue(any("闭环" in m for m in messages(r)))
+            self.assertTrue(any("闭环" in m for m in all_messages(r)))
 
     def test_declared_english_minimum(self):
         self.assertEqual(lint.evaluate("valve " * 99, language="en")[1], "short")
@@ -180,34 +184,34 @@ class LanguageAndScore(unittest.TestCase):
 class EndingAndGenre(unittest.TestCase):
     def test_short_actual_final_summary_is_seen(self):
         r = lint.evaluate(CN + "记录编号1。" + chr(10)*2 + "总而言之。")
-        self.assertTrue(any(m.startswith("[总结式结尾]") for m in messages(r)))
+        self.assertTrue(any(m.startswith("[总结式结尾]") for m in all_messages(r)))
 
     def test_summary_in_previous_long_paragraph_is_not_final(self):
         r = lint.evaluate("总而言之，" + CN + "记录编号1。" + chr(10)*2 + "明天再谈。")
-        self.assertFalse(any(m.startswith("[总结式结尾]") for m in messages(r)))
+        self.assertFalse(any(m.startswith("[总结式结尾]") for m in all_messages(r)))
 
     def test_known_signoffs_do_not_hide_short_body_ending(self):
         text = CN + "编号1。" + chr(10)*2 + "总而言之。" + chr(10)*2 + "此致" + chr(10)*2 + "敬礼"
-        self.assertTrue(any(m.startswith("[总结式结尾]") for m in messages(lint.evaluate(text))))
+        self.assertTrue(any(m.startswith("[总结式结尾]") for m in all_messages(lint.evaluate(text))))
 
     def test_english_tech_honors_summary_gate(self):
         text = EN + chr(10)*2 + "In conclusion, the valve is ready."
-        general = messages(lint.evaluate(text, "general", "en"))
-        tech = messages(lint.evaluate(text, "tech", "en"))
+        general = all_messages(lint.evaluate(text, "general", "en"))
+        tech = all_messages(lint.evaluate(text, "tech", "en"))
         self.assertTrue(any(m.startswith("[英文总结式结尾]") for m in general))
         self.assertFalse(any(m.startswith("[英文总结式结尾]") for m in tech))
 
     def test_mixed_tech_honors_same_gate(self):
         text = EN + CN[:99] + chr(10)*2 + "In conclusion, the valve is ready."
-        general = messages(lint.evaluate(text, "general", "mixed"))
-        tech = messages(lint.evaluate(text, "tech", "mixed"))
+        general = all_messages(lint.evaluate(text, "general", "mixed"))
+        tech = all_messages(lint.evaluate(text, "tech", "mixed"))
         self.assertTrue(any(m.startswith("[英文总结式结尾]") for m in general))
         self.assertFalse(any(m.startswith("[英文总结式结尾]") for m in tech))
 
     def test_english_previous_paragraph_is_not_final_summary(self):
         text = EN + chr(10)*2 + "In conclusion, the valve is ready." + chr(10)*2 + "We will test it tomorrow."
         r = lint.evaluate(text, language="en")
-        self.assertFalse(any(m.startswith("[英文总结式结尾]") for m in messages(r)))
+        self.assertFalse(any(m.startswith("[英文总结式结尾]") for m in all_messages(r)))
 
 class MeasurementBehavior(unittest.TestCase):
     def test_ffamily_zero_penalty_uses_current_normalization(self):
@@ -273,6 +277,84 @@ class MeasurementBehavior(unittest.TestCase):
             self.assertIn("ai_window=[300, 900]", output)
             self.assertIn("picked_median=450.0", output)
             self.assertEqual(len(list((root/"output").glob("human_*.md"))), 2)
+
+class FrequencyGateAndGenre(unittest.TestCase):
+    """v0.59：词表与结尾类信号改频率门，并区分文体的常规用词。"""
+
+    def raw(self, text, genre="general"):
+        """未按 300 字折算的原始权重，便于断言规则本身的阈值。"""
+        return sum(w for w, _ in lint.evaluate(text, genre)[0])
+
+    def tags(self, text, genre="general"):
+        return [m.split("]")[0] + "]" for w, m in lint.evaluate(text, genre)[0] if w]
+
+    def test_single_stock_phrase_is_observed_but_not_scored(self):
+        r = lint.evaluate(CN + "综上所述，记录归档。")
+        self.assertEqual(r[2], 0)
+        self.assertTrue(any("单次命中" in m and "综上所述" in m for m in all_messages(r)))
+        self.assertNotIn("[AI 词]", self.tags(CN + "综上所述，记录归档。"))
+
+    def test_repeated_stock_phrase_scores(self):
+        self.assertEqual(self.raw(CN + "综上所述，记录归档。综上所述，明天复查。"), 8)
+
+    def test_distinct_stock_cluster_scores_on_short_text(self):
+        text = CN + "我们要形成闭环，打造抓手，做好顶层设计，形成生态化打法。"
+        self.assertEqual(self.raw(text), 16)
+        self.assertTrue(any("不同套话" in m for m in all_messages(lint.evaluate(text))))
+
+    def test_scattered_clichés_in_long_text_stay_below_cluster_gate(self):
+        body = CN * 15
+        text = body + "值得注意的是先看编号。综上所述，记录归档。由此可见，明天复查。"
+        self.assertEqual(self.raw(text), 0)
+        self.assertFalse(any("不同套话" in m for m in all_messages(lint.evaluate(text))))
+
+    def test_academic_exempts_common_academic_phrases(self):
+        text = CN + ("众所周知，该方法有局限。众所周知，样本量偏小。"
+                     "值得注意的是，量表未校准。值得注意的是，批次不同。")
+        self.assertGreater(self.raw(text), 0)
+        self.assertEqual(self.raw(text, "academic"), 0)
+
+    def test_speech_skips_summary_outlook_and_dunhao(self):
+        text = CN + "\n\n综上所述，活动到此结束。\n\n总而言之，明年再办。\n\n期待与大家再次相聚。\n\n让我们以同样的耐心携手并进。\n\n记录包括铜板、石块、竹筒、麻绳。清单还列了铁钉、木楔、麻线、绳索。"
+        speech = self.tags(text, "speech")
+        self.assertFalse(any(t in speech for t in ("[顿号连排]", "[总结式结尾]", "[展望式收尾]")))
+        general = self.tags(text)
+        self.assertTrue(any(t in general for t in ("[顿号连排]", "[总结式结尾]", "[展望式收尾]")))
+
+    def test_fiction_exempts_degree_adverbs(self):
+        text = CN + "他十分疲惫，十分安静。" + "那件事十分难办。"
+        self.assertNotIn("[程度用语]", self.tags(text, "fiction"))
+        self.assertIn("[程度用语]", self.tags(text))
+
+    def test_single_ending_marker_is_zero_and_two_score(self):
+        one = CN + "\n\n综上所述，记录归档。"
+        two = CN + "\n\n总而言之，记录归档。\n\n综上所述，明天复查。"
+        self.assertEqual(self.raw(one), 0)
+        self.assertEqual(self.raw(two), 8)
+
+    def test_single_outlook_is_zero_and_two_score(self):
+        one = CN + "\n\n相信我们一定能够完成任务。"
+        two = CN + "\n\n相信我们一定能够完成任务。\n\n期待与各位再次相聚。"
+        self.assertEqual(self.raw(one), 0)
+        self.assertEqual(self.raw(two), 8)
+
+    def test_single_nominalization_is_zero_and_two_score(self):
+        one = CN + "这变成了一种说不清的负担。"
+        two = CN + "这变成了一种说不清的负担。日子变成了一种难以言明的等待。"
+        self.assertEqual(self.raw(one), 0)
+        self.assertEqual(self.raw(two), 5)
+
+    def test_single_dunhao_run_is_zero_and_two_score(self):
+        one = CN + "记录包括铜板、石块、竹筒、麻绳。"
+        two = one + "清单还列了铁钉、木楔、麻线、绳索。"
+        self.assertEqual(self.raw(one), 0)
+        self.assertEqual(self.raw(two), 8)
+
+    def test_pattern_threshold_scales_with_length(self):
+        twice = "随着自动化技术的发展，流程也在调整。随着检测手段的进步，记录也在改。"
+        self.assertEqual(self.raw(CN + twice), 5)
+        self.assertEqual(self.raw(CN * 15 + twice), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

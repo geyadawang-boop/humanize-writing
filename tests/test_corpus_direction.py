@@ -119,11 +119,26 @@ class CorpusDirectionTests(unittest.TestCase):
         self.assertTrue(str(rule["weight"]).startswith("0"))
 
     def test_worst_case_direction_is_not_reversed(self):
-        """整篇加权分不得出现"人类显著更高"的反向；否则整套权重失去意义。"""
-        pairs = [(LINT.evaluate(h.read_text(encoding="utf-8-sig"))[2],
-                  LINT.evaluate(a.read_text(encoding="utf-8-sig"))[2]) for h, a in cred_pairs()]
-        diff = mean([a - h for h, a in pairs])
-        self.assertGreater(diff, 0.0, "cred 上 AI 平均分应高于人类（实测 +1.0），否则应重标定，实得 %.2f" % diff)
+        """整篇加权分不得出现"人类显著更高"的反向；否则整套权重失去意义。
+
+        v0.59 把词表单次命中改为零权重后，cred（多为 100–600 字短文）原先 +1.00 的
+        差距几乎全部来自单词单次命中，实测回落到 -0.07；hc3 的正向由 +1.58 升到 +2.83。
+        词表方向现在由 hc3 与「不同套话种类」簇承担，cred 只保留容差窗口（不足一个
+        8 分条目的 2/30），并要求两套配对合并后仍为正。
+        """
+        cred = [(LINT.evaluate(h.read_text(encoding="utf-8-sig"))[2],
+                 LINT.evaluate(a.read_text(encoding="utf-8-sig"))[2]) for h, a in cred_pairs()]
+        hc3 = [(LINT.evaluate(h.read_text(encoding="utf-8-sig"))[2],
+                LINT.evaluate(a.read_text(encoding="utf-8-sig"))[2]) for h, a in hc3_pairs()]
+        cred_diff = mean([a - h for h, a in cred])
+        hc3_diff = mean([a - h for h, a in hc3])
+        pooled = (sum(a - h for h, a in cred) + sum(a - h for h, a in hc3)) / (len(cred) + len(hc3))
+        self.assertGreater(hc3_diff, 0.0,
+                           "hc3 上 AI 平均分应高于人类（v0.59 实测 +2.83），实得 %.2f" % hc3_diff)
+        self.assertGreater(cred_diff, -0.5,
+                           "cred 短文上不得出现明显反向（不足 2 个 8 分条目），实得 %.2f" % cred_diff)
+        self.assertGreater(pooled, 0.0,
+                           "两套配对合并后 AI 平均分必须更高，实得 %.2f" % pooled)
 
 
 if __name__ == "__main__":

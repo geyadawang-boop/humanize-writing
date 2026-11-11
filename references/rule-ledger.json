@@ -1,6 +1,6 @@
 {
-  "skill_version": "0.58",
-  "ruleset_version": "0.45",
+  "skill_version": "0.59",
+  "ruleset_version": "0.46",
   "scope": "中文/声明英文的静态词表与结构启发式；不判作者身份、不预测外部检测",
   "genre_skips": {
     "general": [],
@@ -46,18 +46,22 @@
     ],
     "email": [],
     "speech": [
-      "路标词"
+      "路标词",
+      "顿号连排",
+      "总结式结尾",
+      "展望式收尾"
     ],
     "fiction": [
-      "段落开头"
+      "段落开头",
+      "程度用语"
     ]
   },
   "rules": [
     {
       "tag": "[AI 词]",
       "kind": "weighted",
-      "weight": "min(12, 4×命中词数)",
-      "evidence": "cred 30 对 δ=-0.20（AI 略多，方向成立）；外部 270 对 δ≈+0.10 不显著。保留权重但不放大。",
+      "weight": "同词 min(12, 4×次数)（≥2 次）；或不同套话 ≥3 种且 ≥2 种/千字 → min(16, 4×种数)。单次命中 0 分",
+      "evidence": "cred 30 对 δ=-0.20（AI 略多，方向成立）；外部 270 对 δ≈+0.10 不显著。v0.59 起单次命中只作定位：cred 短文原先 +1.00 的差距几乎全部来自单词单次命中，改后为 -0.07；hc3 反向由 +1.58 升到 +2.83。保留权重但不放大。",
       "probe": {
         "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。我们要形成闭环，打造抓手，做好顶层设计。",
         "genre": "general",
@@ -108,8 +112,8 @@
     {
       "tag": "[程度用语]",
       "kind": "weighted",
-      "weight": "4/词（同一词 ≥3 次）",
-      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "weight": "4/词（同一词 ≥ max(3, 2 处/千字)）",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。v0.59 起按千字密度取阈值，记叙文（fiction）关闭该检查。",
       "probe": {
         "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。记录十分清楚。操作十分谨慎。我们十分担忧。",
         "genre": "general",
@@ -121,8 +125,8 @@
     {
       "tag": "[AI 句式]",
       "kind": "weighted",
-      "weight": "5（超过该模式上限）",
-      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "weight": "5（达到千字密度阈值：不仅…还 1.5 处/千字，随着/在当今 1.0 处/千字；下限 2 处）",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。v0.59 起按千字密度取阈，长文偶发一处不再计分。",
       "probe": {
         "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。随着技术的发展，流程不断调整。随着设备的进步，记录方式也变了。随着流程的推进，交接手续更加复杂。",
         "genre": "general",
@@ -147,10 +151,10 @@
     {
       "tag": "[顿号连排]",
       "kind": "weighted",
-      "weight": "min(8, 4×处数)",
-      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "weight": "min(8, 4×处数)（≥2 处；单处 0 分）",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。v0.59 起单处完整列项只定位，不因一次四项连排计分。",
       "probe": {
-        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。苹果、香蕉、橘子、梨子、桃子、葡萄。",
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。苹果、香蕉、橘子、梨子、桃子、葡萄。车间、仓库、码头、货场、站台、月台。",
         "genre": "general",
         "language": "auto",
         "fingerprint": false,
@@ -199,10 +203,10 @@
     {
       "tag": "[抽象名词化]",
       "kind": "weighted",
-      "weight": "5（族内只报一次）",
-      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "weight": "5（≥2 处；单处 0 分）",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。v0.59 起单处「一种…」只作定位。",
       "probe": {
-        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。这样做变成了一种难以言明的负担。",
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。这样做变成了一种难以言明的负担。日子变成了一种说不清的等待。",
         "genre": "general",
         "language": "auto",
         "fingerprint": false,
@@ -212,10 +216,10 @@
     {
       "tag": "[总结式结尾]",
       "kind": "weighted",
-      "weight": "8",
-      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "weight": "8（全文总结路标 ≥2 处；单处 0 分）",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。v0.59 起一次收束只定位，重复总结路标才计分；演讲（speech）关闭该检查。",
       "probe": {
-        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。\n\n综上所述，流程还需要继续调整。",
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。\n\n综上所述，流程还需要继续调整。\n\n总而言之，记录方式也要改。",
         "genre": "general",
         "language": "auto",
         "fingerprint": false,
@@ -238,10 +242,10 @@
     {
       "tag": "[展望式收尾]",
       "kind": "weighted",
-      "weight": "8",
-      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "weight": "8（末尾窗口 ≥2 处；单处 0 分）",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。v0.59 起单处祝愿/邀请只定位，同一结尾窗口堆叠才计分；演讲（speech）关闭该检查。",
       "probe": {
-        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。\n\n相信我们一定能够完成任务。",
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。\n\n相信我们一定能够完成任务。\n\n期待与各位再次相聚。",
         "genre": "general",
         "language": "auto",
         "fingerprint": false,
@@ -397,7 +401,7 @@
       "weight": "0（状态/观察行）",
       "evidence": "状态/提示行，不参与计分。",
       "probe": {
-        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。闭环",
+        "text": "第一组样本抽取总量的十分之一，用于测量初始状态；第二组样本抽取余量的十分之一，用于复核仪器读数；第三组样本仍按原定方案抽取总量的十分之一，用于核对批次差异。三个分母并不相同，操作人员应分别登记总量、余量与抽样数量，不能将三个比例直接相加，也不能为了表述简短省略分母。闭环控制。闭环回路。",
         "genre": "general",
         "language": "auto",
         "fingerprint": false,
@@ -459,8 +463,8 @@
     {
       "tag": "[英文 AI 词]",
       "kind": "weighted",
-      "weight": "min(10, 2×次数)",
-      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "weight": "同词 min(10, 2×次数)（≥2 次）；或不同套话 ≥3 种且 ≥2 种/千词 → min(10, 3×种数)。单次命中 0 分",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。v0.59 起单次命中只定位；tech/academic/official 文体豁免常规用词。",
       "probe": {
         "text": "Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. We will delve into the robust and seamless tapestry of this crucial landscape. ",
         "genre": "general",
@@ -472,10 +476,10 @@
     {
       "tag": "[英文总结式结尾]",
       "kind": "weighted",
-      "weight": "8",
-      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。",
+      "weight": "8（全文总结路标 ≥2 处；单处 0 分）",
+      "evidence": "设计样本与冻结语料标定；未做配对复测，权重未定标。v0.59 起与中文一致，单处只定位。",
       "probe": {
-        "text": "Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. We will delve into the robust and seamless tapestry of this crucial landscape. \n\nIn conclusion, the project was hard and the result is modest.",
+        "text": "Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. Our team spent the summer rebuilding the delivery pipeline and talking to the people who use it every day. We kept notes, compared them, and rewrote the parts that confused people. The work was slow, and some of it was boring, but it made the tool easier to trust. We will delve into the robust and seamless tapestry of this crucial landscape. \n\nIn conclusion, the project was hard and the result is modest. In conclusion, the notes matter more than the slides.",
         "genre": "general",
         "language": "en",
         "fingerprint": false,
