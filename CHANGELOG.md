@@ -13,8 +13,9 @@
 - `ledger_check.py` 与 `writing_project.py` 的文本读取改为与 `ai_smell_lint.py` 相同的 BOM/GBK 解码顺序。此前 GBK 台账或项目文件会被判成「无法读取」或「UTF-8 错误」，同一份稿在不同工具间结果不一致。
 - 新增 4 项回归：GBK 台账可读、GBK 项目文件可读、CRLF 归一到 LF、新文档必须同时被三处入口索引。
 - `[段落开头]` 改为按正文顺序计数并取次数最多者（并列取最先出现者）。旧版遍历 `set(starts)`，跨进程受哈希随机化影响，同一篇稿在不同次运行会报不同段首；`writing_project.py` 的「场景未覆盖」错误列表同步改为有序输出。
+- 补齐 npm 包元数据：`package.json`、`files` 白名单（含 `!**/__pycache__/`）与 `npm test` / `npm run selftest`，`npm pack` 产出 572 个文件、只做内容分发、不暴露 CLI。
 
-效果：236 项 unittest 与 selftest 通过；lint 规则集、权重、分数、`status` 与退出码均未变。
+效果：237 项 unittest 与 selftest 通过；lint 规则集、权重、分数、`status` 与退出码均未变。
 
 ## 0.57：压缩入口说明、统一文稿解码、修正 Python 3.8 测试兼容
 

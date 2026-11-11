@@ -47,6 +47,8 @@ Claude Code（macOS/Linux）: ~/.claude/skills/humanize-writing
 
 Trae 或其他支持 `SKILL.md` 的环境放入各自的 skills 目录即可。技能以自身根目录定位脚本，不依赖当前工作目录。
 
+也可以用 npm 做内容分发（不提供 CLI）：`npm pack` 生成 `humanize-writing-0.58.0.tgz`，解包后把其中的 `humanize-writing/` 复制到上面的技能目录。
+
 **2. 验证安装**
 
 ```bash
@@ -142,6 +144,7 @@ humanize-writing/
 ├── SKILL.md                 # 智能体入口：任务识别、执行边界、交付纪律
 ├── README.md                # 本文件：定位、原理、功能与用法
 ├── CHANGELOG.md             # 版本变更记录
+├── package.json             # npm 包元数据（内容分发，不暴露 CLI）
 ├── LICENSE                  # Apache-2.0
 ├── references/              # 63 份按需读取的工艺、流程与证据文档 + 规则台账
 │   ├── README.md            # 分类索引（建议从这里进入）
@@ -157,7 +160,7 @@ humanize-writing/
 │   ├── ledger_check.py      # 6 组台账检查
 │   ├── ai_smell_lint.py     # 静态写作线索扫描
 │   └── compare_report.py    # 改前改后对比报告
-└── tests/                   # 17 组、236 项单元测试 + selftest + 6 套冻结语料
+└── tests/                   # 17 组、237 项单元测试 + selftest + 6 套冻结语料
 ```
 
 ## 命令行工具
@@ -268,8 +271,8 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --seman
 
 | 项目 | 现状 |
 |---|---|
-| 自动化测试 | 236 项 unittest 全部通过；`selftest.py` RC=0 |
-| 结构审计 | 573 个文件全部 UTF-8 / LF；本地链接可达；63 篇 references 均有加载入口 |
+| 自动化测试 | 237 项 unittest 全部通过；`selftest.py` RC=0 |
+| 结构审计 | 574 个文件全部 UTF-8 / LF；本地链接可达；63 篇 references 均有加载入口 |
 | 规则台账 | 41 条（加权 16 / 观察 15 / 状态 10），探针逐条驱动 |
 | 冻结语料 | 6 套（含 HC3 与 CReD 配对集），方向测试锁定权重 |
 | 端到端 | `init` → 写章 → `lint` → 改写 → `compare_report` → `checkpoint` → `check` |

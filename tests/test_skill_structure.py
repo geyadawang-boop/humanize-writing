@@ -1,5 +1,6 @@
 """File-contract checks only; semantic routing needs independent task evaluation."""
 from pathlib import Path
+import json
 import re
 import unittest
 from urllib.parse import unquote
@@ -107,6 +108,24 @@ class SkillStructureTests(unittest.TestCase):
         self.assertEqual(sections[0], version, '最新版本记录必须就是当前版本')
         self.assertEqual(sections, sorted(sections, key=lambda v: tuple(map(int, v.split('.'))), reverse=True),
                          '版本记录必须按版本号降序排列')
+
+    def test_npm_package_metadata_matches_skill(self):
+        """npm 包只做内容分发：名称、许可证、版本与 files 白名单必须和技能一致。"""
+        pkg_path = ROOT / 'package.json'
+        self.assertTrue(pkg_path.is_file(), '缺少 package.json')
+        pkg = json.loads(pkg_path.read_text(encoding='utf-8'))
+        self.assertEqual(pkg['name'], 'humanize-writing')
+        self.assertEqual(pkg['license'], 'Apache-2.0')
+        skill = (ROOT / 'SKILL.md').read_text(encoding='utf-8')
+        version = re.search(r"version:\s*'([0-9]+\.[0-9]+)'", skill).group(1)
+        self.assertEqual(pkg['version'].rsplit('.', 1)[0], version,
+                         'package.json 主次版本必须与 SKILL.md 一致')
+        self.assertEqual(pkg['repository']['url'],
+                         'git+https://github.com/geyadawang-boop/humanize-writing.git')
+        for entry in ('SKILL.md', 'references/', 'scripts/', 'templates/', 'tests/'):
+            self.assertIn(entry, pkg['files'], f'files 白名单缺少 {entry}')
+        self.assertNotIn('.git', pkg['files'])
+        self.assertFalse(pkg.get('bin'), '内容分发包不应暴露 CLI 入口')
 
 
 if __name__ == '__main__':
