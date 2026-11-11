@@ -66,6 +66,14 @@ class CompareReportTests(unittest.TestCase):
         self.assertIn("静态写作线索分", text)
         self.assertNotIn("<script>", text)
 
+    def test_gbk_input_uses_same_decoding_as_lint(self):
+        text = "他走进房间，看见桌上放着一封信。窗外的雨还没有停。" * 10
+        self.before.write_bytes(text.encode("gbk"))
+        self.after.write_bytes(text.encode("gbk"))
+        code, out, _, err = self.build()
+        self.assertEqual(code, 0, err)
+        self.assertIn("静态写作线索分", out.read_text(encoding="utf-8"))
+
     def test_unrelated_paragraphs_are_not_inline_mixed(self):
         """相似度过低的段落不许硬做字符对照，必须拆成删一段 + 增一段。"""
         blocks = REPORT.diff_blocks("甲" * 200 + "，乙。", "丙" * 200 + "，丁。")

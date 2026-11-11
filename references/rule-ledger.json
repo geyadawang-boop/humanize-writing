@@ -1,5 +1,5 @@
 {
-  "skill_version": "0.56",
+  "skill_version": "0.57",
   "ruleset_version": "0.45",
   "scope": "中文/声明英文的静态词表与结构启发式；不判作者身份、不预测外部检测",
   "genre_skips": {

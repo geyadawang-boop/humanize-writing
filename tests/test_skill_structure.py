@@ -44,7 +44,12 @@ class SkillStructureTests(unittest.TestCase):
                 if not target:
                     continue
                 resolved = (source.parent / target).resolve()
-                if not resolved.is_relative_to(ROOT.resolve()) or not resolved.exists():
+                try:
+                    resolved.relative_to(ROOT.resolve())
+                except ValueError:
+                    errors.append(f'{relative} -> {target}')
+                    continue
+                if not resolved.exists():
                     errors.append(f'{relative} -> {target}')
         self.assertEqual(errors, [], '\n'.join(errors))
 

@@ -377,7 +377,9 @@ def build_html(before_text, after_text, before, after, name0, name1, semantic, t
 
 
 def read(path):
-    return Path(path).read_text(encoding="utf-8")
+    # 与 ai_smell_lint 共用解码顺序（UTF-8 / GBK / UTF-16 与 UTF-32 BOM），
+    # 避免同一稿能 lint 却在对比报告里报“无法读取”。
+    return lint.read_text(str(path))
 
 
 def main(argv=None):

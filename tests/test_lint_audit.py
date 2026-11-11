@@ -69,6 +69,31 @@ class CliBehavior(unittest.TestCase):
         self.assertIs(data["language_is_verified"], False)
         self.assertEqual(data["language"], "en")
 
+class InputEncoding(unittest.TestCase):
+    def test_utf16_and_utf32_bom_are_decoded(self):
+        text = "他走进房间，看见桌上放着一封信。" * 20
+        cases = {
+            "utf-16": text.encode("utf-16"),
+            "utf-16-le-bom": b"\xff\xfe" + text.encode("utf-16-le"),
+            "utf-16-be-bom": b"\xfe\xff" + text.encode("utf-16-be"),
+            "utf-32": text.encode("utf-32"),
+        }
+        with tempfile.TemporaryDirectory() as d:
+            for name, data in cases.items():
+                path = Path(d) / (name + ".txt")
+                path.write_bytes(data)
+                self.assertEqual(lint.read_text(path), text, name)
+
+    def test_utf8_bom_and_gbk_are_decoded(self):
+        text = "他走进房间，看见桌上放着一封信。"
+        with tempfile.TemporaryDirectory() as d:
+            utf8 = Path(d) / "bom.txt"
+            utf8.write_bytes(b"\xef\xbb\xbf" + text.encode("utf-8"))
+            self.assertEqual(lint.read_text(utf8), text)
+            gbk = Path(d) / "gbk.txt"
+            gbk.write_bytes(text.encode("gbk"))
+            self.assertEqual(lint.read_text(gbk), text)
+
 class LanguageAndScore(unittest.TestCase):
     def test_mixed_99_to_100_keeps_identical_english_signal_score(self):
         left = lint.evaluate(EN + CN[:99], "tech", "mixed")

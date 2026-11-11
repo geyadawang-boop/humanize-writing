@@ -252,23 +252,25 @@ ANCHOR_RE = re.compile(
 )
 
 
-def read_text(path):
-    if path == "-":
-        data = sys.stdin.buffer.read()
-        for enc in ("utf-8", "utf-8-sig", "gbk"):
-            try:
-                return data.decode(enc)
-            except UnicodeDecodeError:
-                continue
-        return data.decode("utf-8", errors="replace")
-    for enc in ("utf-8", "utf-8-sig", "gbk"):
+def decode_bytes(data):
+    """按 BOM 与常见中文编码解码；UTF-16/32 BOM 优先于 GBK 猜测。"""
+    for bom, enc in ((b"\xff\xfe\x00\x00", "utf-32"), (b"\x00\x00\xfe\xff", "utf-32"),
+                     (b"\xff\xfe", "utf-16"), (b"\xfe\xff", "utf-16")):
+        if data.startswith(bom):
+            return data.decode(enc)
+    for enc in ("utf-8-sig", "gbk"):
         try:
-            with open(path, "r", encoding=enc) as f:
-                return f.read()
+            return data.decode(enc)
         except UnicodeDecodeError:
             continue
-    with open(path, "r", encoding="utf-8", errors="replace") as f:
-        return f.read()
+    return data.decode("utf-8", errors="replace")
+
+
+def read_text(path):
+    if path == "-":
+        return decode_bytes(sys.stdin.buffer.read())
+    with open(path, "rb") as f:
+        return decode_bytes(f.read())
 
 
 def strip_markdown(t):

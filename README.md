@@ -4,7 +4,7 @@
 
 | 项目 | 说明 |
 |---|---|
-| 当前版本 | v0.56（程序与 lint 规则集 0.45） |
+| 当前版本 | v0.57（程序与 lint 规则集 0.45） |
 | 文档语言 | 简体中文 |
 | 运行依赖 | Python 3.8+，仅标准库，无需安装第三方包 |
 | 许可证 | [Apache-2.0](LICENSE) |
@@ -156,7 +156,7 @@ humanize-writing/
 │   ├── ledger_check.py      # 6 组台账检查
 │   ├── ai_smell_lint.py     # 静态写作线索扫描
 │   └── compare_report.py    # 改前改后对比报告
-└── tests/                   # 17 组、228 项单元测试 + selftest + 6 套冻结语料
+└── tests/                   # 17 组、231 项单元测试 + selftest + 6 套冻结语料
 ```
 
 ## 命令行工具
@@ -224,6 +224,7 @@ python -B scripts/ai_smell_lint.py -              # 从 stdin 读取
 
 - 文体门控：`general / tech / academic / official / law / email / speech / fiction`，各文体豁免项不同。
 - 语言声明：`auto / zh / en / mixed`。`auto` 不是语言识别器；中文不足 100 字时未声明文本只作有限扫描。
+- 文件编码：UTF-8（含 BOM）、GBK、UTF-16/UTF-32（带 BOM）均可读取，单文件与目录批量一致。
 
 **零权重观察（不计分，也不设配额）**
 
@@ -266,7 +267,7 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --seman
 
 | 项目 | 现状 |
 |---|---|
-| 自动化测试 | 228 项 unittest 全部通过；`selftest.py` RC=0 |
+| 自动化测试 | 231 项 unittest 全部通过；`selftest.py` RC=0 |
 | 结构审计 | 572 个文件（文本 568）UTF-8 / LF；本地链接可达；62 篇 references 均有加载入口 |
 | 规则台账 | 41 条（加权 16 / 观察 15 / 状态 10），探针逐条驱动 |
 | 冻结语料 | 6 套（含 HC3 与 CReD 配对集），方向测试锁定权重 |
@@ -279,7 +280,7 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --seman
 
 - v0.38：81 项自动测试；完成 4015 汉字六章短篇网文（含文件交接续写）与 2252 汉字三集九场微型剧本，均为模型辅助评阅的完整草稿。
 - v0.39–v0.40：追加文学选段实改、连载局部只读评阅与新写短请求试用，保留首轮缺陷与修正记录。
-- v0.41–v0.56：主要调整文档与 lint 计分口径，程序主体保持不变；跨版本分数变化不能当作文风改善。
+- v0.41–v0.57：主要调整文档与 lint 计分口径，程序主体保持不变；跨版本分数变化不能当作文风改善。
 
 各版本改动与验证证据见 [CHANGELOG.md](CHANGELOG.md)。
 

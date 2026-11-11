@@ -4,6 +4,16 @@
 
 版本号只表示本的维护批次，不代表能力等级；跨版本的分数变化不能直接当作文风改善或能力提升。
 
+## 0.57：压缩入口说明、统一文稿解码、修正 Python 3.8 测试兼容
+
+`SKILL.md` 原先把 v0.49–v0.54 的逐版说明直接堆在工具入口，单段最长近千字，既重复本文件，也挤占每次任务都要加载的上下文。现改为「当前静态扫描口径（规则集 0.45）」：零权重观察、`[分行]`/`[分行结构]`、`--fingerprint`、`--candidates`、规则台账、批量与对比各一条，只保留现行行为与边界；逐版证据仍在本文与 `references/`。
+
+- `compare_report.py` 原先只按 UTF-8 读取，同一份 GBK 稿能通过 `ai_smell_lint.py`，却在对比报告里报「无法读取」。现复用 lint 的解码顺序，并新增 GBK 双稿回归测试。
+- `ai_smell_lint.py` 现优先识别 UTF-16/UTF-32 BOM：Windows「Unicode」文稿不再被静默当成「0 中文字/语言未确认」，而能正常统计；UTF-8 BOM 也不再保留在正文首字符。
+- `tests/test_skill_structure.py` 使用 `Path.is_relative_to`（Python 3.9+），与 README 声明的 Python 3.8+ 不符。现改为 `relative_to` + `ValueError`，3.8 也能跑完整测试。
+
+效果：231 项 unittest 与 selftest 通过；lint 规则集、权重、分数、`status` 与退出码均未变。
+
 ## 0.56：修正初始项目误报、知识库入口与 reopen 状态校验
 
 `writing_project.py check` 会把 `templates/chapter-progress.md` 自带的占位行（只有章号、其余全空）当成已完成章节，于是 `init` 后第一次检查就报「章节进度表把未实际写成或范围外章节记为完成：[1, 2]」，与「空表不等于检查通过」的判定互相矛盾。
