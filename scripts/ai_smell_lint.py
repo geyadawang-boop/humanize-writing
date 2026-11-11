@@ -253,17 +253,23 @@ ANCHOR_RE = re.compile(
 
 
 def decode_bytes(data):
-    """按 BOM 与常见中文编码解码；UTF-16/32 BOM 优先于 GBK 猜测。"""
+    """按 BOM 与常见中文编码解码；行尾统一为 LF，与文本模式读取一致。"""
+    text = None
     for bom, enc in ((b"\xff\xfe\x00\x00", "utf-32"), (b"\x00\x00\xfe\xff", "utf-32"),
                      (b"\xff\xfe", "utf-16"), (b"\xfe\xff", "utf-16")):
         if data.startswith(bom):
-            return data.decode(enc)
-    for enc in ("utf-8-sig", "gbk"):
-        try:
-            return data.decode(enc)
-        except UnicodeDecodeError:
-            continue
-    return data.decode("utf-8", errors="replace")
+            text = data.decode(enc)
+            break
+    if text is None:
+        for enc in ("utf-8-sig", "gbk"):
+            try:
+                text = data.decode(enc)
+                break
+            except UnicodeDecodeError:
+                continue
+    if text is None:
+        text = data.decode("utf-8", errors="replace")
+    return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
 def read_text(path):
@@ -819,11 +825,18 @@ def check(text, genre="general", language="auto"):
             plens = [chinese_len(p) for p in paras]
             add(0, "[段落] 统计段落长度 %d~%d 字（仅观察，不设长短比）→ 按主题、场景、说话人和信息层次核读分段；等长或不等长均可有功能，不为比例重分段" % (min(plens), max(plens)))
         if "段落开头" not in skips:
+            # v0.58：按正文首次出现顺序统计，取次数最多者、并列取最先出现者。
+            # 旧版遍历 set(starts)，跨进程受哈希随机化影响，同一稿可能报不同段首。
             starts = [p[:3] for p in paras]
-            for st in set(starts):
-                if starts.count(st) >= 3:
-                    add(5, "[段落开头] '%s…' 起头的段落 × %d → 核对重复作用；必要指称、排比和有意复沓保留，不为次数变换开头" % (st, starts.count(st)))
-                    break
+            counts = {}
+            order = {}
+            for i, st in enumerate(starts):
+                counts[st] = counts.get(st, 0) + 1
+                order.setdefault(st, i)
+            repeated = [(n, st) for st, n in counts.items() if n >= 3]
+            if repeated:
+                n, st = max(repeated, key=lambda kv: (kv[0], -order[kv[1]]))
+                add(5, "[段落开头] '%s…' 起头的段落 × %d → 核对重复作用；必要指称、排比和有意复沓保留，不为次数变换开头" % (st, n))
     else:
         add(0, "[段落] 段落数 <3，跳过段落层检测")
 

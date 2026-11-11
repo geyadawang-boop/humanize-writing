@@ -1,6 +1,6 @@
 # references：知识索引
 
-本目录存放技能的工艺、流程、边界与研究文档，共 62 份，外加 1 份机器可读的规则台账。**不要整目录阅读**：先由 [统一路由](routing.md) 判定任务，再按症状加载一至三份；单次优先解决一两个主要问题。
+本目录存放技能的工艺、流程、边界与研究文档，共 63 份，外加 1 份机器可读的规则台账。**不要整目录阅读**：先由 [统一路由](routing.md) 判定任务，再按症状加载一至三份；单次优先解决一两个主要问题。
 
 ## 一、入口与地图
 
@@ -45,6 +45,7 @@
 | [dialogue-craft.md](dialogue-craft.md) | 对白：潜台词、信息差、节奏与权力、群戏、沉默与停顿 |
 | [prose-flow-craft.md](prose-flow-craft.md) | 句段工艺：衔接、意合流水句、节奏判据、主述位推进、详略、文气、炼字 |
 | [sentence-discipline.md](sentence-discipline.md) | 句子级编辑：语义、修饰、抽象、关系、指称 |
+| [han-prose-grammar.md](han-prose-grammar.md) | 汉语行文决断：宾主与焦点、修饰语次序与「的」、连词位置、语序、收束语气、节奏错综 |
 | [argument-and-rhythm.md](argument-and-rhythm.md) | 对照、句段节奏与工整化：贬一抬一、虚假二选一、对仗凑数、碎句 |
 | [rhetoric-craft.md](rhetoric-craft.md) | 修辞与叙事传统：中文修辞格、比喻、反讽、留白、母题与复现、陌生化 |
 | [style-craft.md](style-craft.md) | 人味文风修炼：文风升级模式与声音契约 |

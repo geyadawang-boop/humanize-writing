@@ -2,7 +2,7 @@
 name: humanize-writing
 description: 创作、续写、修订和润色中文或英文文本：去 AI 味、去 AI 腔、去模板感、拆套话、说人话，改善空洞、重复与过度工整的表达。适用于小说、网文、剧本、诗歌、歌词、旧体诗词、散文、议论文、学术论文与研究生学位论文、演讲稿与发言稿、标题，以及只查不改的文本评阅；长篇任务管理大纲、正文、连续性台账和完结验收。检测分数仅供编辑参考，不鉴定作者身份或保证过检。
 metadata:
-  version: '0.57'
+  version: '0.58'
 ---
 
 # Humanize Writing
@@ -20,6 +20,7 @@ metadata:
 | 只查不改 / 评阅已有稿 | [编辑流程](references/editing-workflow.md)的评阅分支 | 报位置、问题、影响与建议，不写回原稿 |
 | 起标题 / 改标题 | [标题工艺](references/title-craft.md) | 按用户要的数量给候选；只改标题不重写正文 |
 | 新写短篇、诗歌、散文或文章 | [统一路由](references/routing.md) | 选对应文体专章；小任务直接写，无须建立项目台账 |
+| 句子别扭、重心不清、修饰语堆叠、收尾发虚 | [汉语行文决断](references/han-prose-grammar.md) | 按重心→修饰→连接→语序→收束→节奏逐类查，一次改一类；不按计数删 |
 | 写一篇议论文 / 评论 / 驳论文 | [议论文工艺](references/argumentative-craft.md) | 先定争点层次（已一致的那层放弃），再决定材料、让步与收尾；反方必须真实存在 |
 | 期刊/会议论文 | [学术工艺](references/academic-craft.md) | 先核目标刊稿约与摘要模型；语言强度与证据是否闭合相配，稿约数字绑具体刊物 |
 | 研究生学位论文 / 开题 / 答辩 | [学位论文工艺](references/thesis-craft.md) | **先取本校现行稿约**（字数、章节、披露与检测口径），校规优先于本技能的通用默认 |
@@ -27,7 +28,7 @@ metadata:
 | 电影 / 电视剧 / 短剧 / 话剧 / 广播剧 | [剧本全程流程](references/screenplay-workflow.md) | 先定媒介与交付格式；连续项目再读项目执行 |
 | 小说改剧本 / 剧本转小说 / 多种交付物 | [统一路由](references/routing.md)的改编分支 | 源作事实与目标媒介分别管理，逐项验收 |
 | 查知识覆盖、路由或整部创作能力 | [知识与能力地图](references/knowledge-map.md)；需要补料时读[资料补充与验证](references/material-intake.md) | 区分知识缺口、作品需求缺口与长篇验证缺口；只索取有明确用途的材料 |
-| 找不到对应主题 / 需要全量文档清单 | [知识库总索引](references/README.md) | 62 篇文档按用途分组；先查索引再按需加载，不整目录通读 |
+| 找不到对应主题 / 需要全量文档清单 | [知识库总索引](references/README.md) | 63 篇文档按用途分组；先查索引再按需加载，不整目录通读 |
 
 校园/青春题材按上述交付物选主流程，再按需追加[校园创作指南](references/campus-youth-craft.md)；涉及中国影视制作/公开播出的审校时，再查[内容与未成年人边界](references/china-screen-content-boundaries.md)。不能仅因“校园”关键词把小说改派为儿童节目或法律审查。
 

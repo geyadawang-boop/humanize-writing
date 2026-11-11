@@ -4,6 +4,7 @@ import csv
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -93,6 +94,31 @@ class InputEncoding(unittest.TestCase):
             gbk = Path(d) / "gbk.txt"
             gbk.write_bytes(text.encode("gbk"))
             self.assertEqual(lint.read_text(gbk), text)
+
+    def test_crlf_is_normalized_to_lf(self):
+        """二进制读取要还原文本模式的行尾行为，否则表格与标题匹配会错位。"""
+        text = "第一行\n第二行\n"
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "crlf.md"
+            path.write_bytes("第一行\r\n第二行\r\n".encode("utf-8"))
+            self.assertEqual(lint.read_text(path), text)
+
+    def test_paragraph_leader_is_stable_across_hash_seeds(self):
+        """[段落开头] 取次数最多者、并列取正文最先出现者，不受哈希随机化影响。"""
+        a = "河面起雾的时候，摆渡人把缆绳在木桩上绕了两圈，先蹲下来看水色。"
+        b = "对岸的灯一盏一盏熄掉，他把船篷的绳子又紧了一道，仍在等雾散。"
+        c = "乘客问他为什么还不开船，他说再等一袋烟，眼睛没有离开水面。"
+        text = "\n\n".join([a, b, b, b, c, c, c, a])
+        outs = set()
+        for seed in ("0", "1", "2", "3"):
+            r = subprocess.run([sys.executable, "-B", str(ROOT / "scripts/ai_smell_lint.py"), "-"],
+                               input=text, capture_output=True, text=True, encoding="utf-8",
+                               timeout=10, env=dict(os.environ, PYTHONHASHSEED=seed))
+            outs.add(r.stdout)
+        self.assertEqual(len(outs), 1, "同一输入在不同哈希种子下输出不一致")
+        leader = [line for line in outs.pop().splitlines() if "[段落开头]" in line]
+        self.assertEqual(len(leader), 1, "次数并列时应只报一条")
+        self.assertIn("'对岸的…' 起头的段落 × 3", leader[0])
 
 class LanguageAndScore(unittest.TestCase):
     def test_mixed_99_to_100_keeps_identical_english_signal_score(self):

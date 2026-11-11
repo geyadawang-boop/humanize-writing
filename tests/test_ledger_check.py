@@ -62,6 +62,14 @@ class LedgerTests(unittest.TestCase):
         self.assertEqual(rep.exit_code, 0, rep.warn + rep.red)
         self.assertTrue(rep.complete)
 
+    def test_gbk_ledger_is_decoded(self):
+        """Windows 记事本常存 GBK；台账读取不得因编码被判成不可用。"""
+        with (self.root / 'ledger' / 'foreshadowing-ledger.md').open('wb') as handle:
+            handle.write(table(F_HEADERS, [frow()]).encode('gbk'))
+        rep = self.run_check()
+        self.assertEqual(rep.exit_code, 0, rep.warn + rep.red)
+        self.assertTrue(rep.complete)
+
     def test_only_future_progress_cannot_pass_final(self):
         self.progress([21, 22], [4, 6])
         self.write('ledger/foreshadowing-ledger.md', table(F_HEADERS, [frow(state='已回收')]))

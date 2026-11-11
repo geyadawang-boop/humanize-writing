@@ -174,6 +174,13 @@ class ProjectTest(unittest.TestCase):
         self.assertEqual(code, 2, output)
         self.assertEqual(wp.load_state(self.root)['stage'], 'paused')
 
+    def test_gbk_support_file_is_decoded(self):
+        """项目文件被存成 GBK 时，读取应返回正文，而不是抛编码错误。"""
+        wp.init_project(self.root, 'novel', '短篇小说', 2, '借灯')
+        path = wp.inside(self.root, 'story-bible.md')
+        path.write_bytes('小满要在天亮前点亮灯塔。'.encode('gbk'))
+        self.assertEqual(wp.read_text(self.root, 'story-bible.md'), '小满要在天亮前点亮灯塔。')
+
     def test_init_never_overwrites_existing_content(self):
         self.root.mkdir()
         self.write('keep.md', '用户的既有文稿')

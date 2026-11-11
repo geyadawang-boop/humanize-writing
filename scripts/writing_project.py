@@ -74,14 +74,34 @@ def inside(root, relative):
     return result
 
 
+def decode_bytes(data):
+    """按 BOM 与常见中文编码解码；行尾统一为 LF，顺序与 ai_smell_lint 保持一致。"""
+    text = None
+    for bom, enc in ((b"\xff\xfe\x00\x00", "utf-32"), (b"\x00\x00\xfe\xff", "utf-32"),
+                     (b"\xff\xfe", "utf-16"), (b"\xfe\xff", "utf-16")):
+        if data.startswith(bom):
+            text = data.decode(enc)
+            break
+    if text is None:
+        for enc in ("utf-8-sig", "gbk"):
+            try:
+                text = data.decode(enc)
+                break
+            except UnicodeDecodeError:
+                continue
+    if text is None:
+        text = data.decode("utf-8", errors="replace")
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def read_text(root, relative):
     path = inside(root, relative)
     if not path.is_file():
         raise ProjectError(f'文件缺失：{relative}')
     try:
-        return path.read_text(encoding='utf-8-sig')
-    except (OSError, UnicodeError) as exc:
-        raise ProjectError(f'无法读取 UTF-8 文件 {relative}: {exc}') from exc
+        return decode_bytes(path.read_bytes())
+    except OSError as exc:
+        raise ProjectError(f'无法读取文件 {relative}: {exc}') from exc
 
 
 def read_json(root, relative):
@@ -317,9 +337,9 @@ def init_project(root, kind, format_name, units, title, unit_type=None):
         path = TEMPLATES / template
         if not path.is_file():
             raise ProjectError(f'缺少安装模板：{path}')
-        texts[relative] = path.read_text(encoding='utf-8-sig')
+        texts[relative] = decode_bytes(path.read_bytes())
     for name in ('session-handoff.md', 'quality-review.md'):
-        texts[name] = (TEMPLATES / name).read_text(encoding='utf-8-sig')
+        texts[name] = decode_bytes((TEMPLATES / name).read_bytes())
     ending = {'ending_note': '', 'promises': [
         {'id': key, 'promise': label, 'disposition': 'open', 'units': [], 'reason': ''}
         for key, label in (('main-conflict', '主冲突'), ('protagonist-arc', '主人公选择与变化'),
@@ -527,7 +547,7 @@ def screenplay_errors(root, state, final):
             errors.append(f'场景 {sid} 的 episode_id 与单元所属集不一致')
         if eid not in ('N/A', 'NA', 'standalone'):
             mapped_episodes.setdefault(eid, []).append(sid)
-    for sid in set(expected) - seen:
+    for sid in sorted(set(expected) - seen):
         errors.append(f'{sid} 未覆盖在场景表 scene-list.md')
     episode_text = '\n'.join(visible_markdown_lines(read_text(root, 'episode-outline.md')))
     expected_episodes = episode_scenes or mapped_episodes
@@ -596,7 +616,7 @@ def inspect_project(root, state, final=False, require_reviews=True):
             structural.append(f'必需项目文件缺失：{relative}')
         elif digest_bytes(path.read_bytes()) == state['template_hashes'].get(relative):
             errors.append(f'项目文件仍是未填写模板：{relative}')
-        elif not path.read_text(encoding='utf-8-sig').strip():
+        elif not read_text(root, relative).strip():
             errors.append(f'项目文件为空：{relative}')
     for unit in state['units']:
         for relative in unit.get('depends_on', []):

@@ -21,6 +21,7 @@ ACTIVE = (
     'references/academic-craft.md', 'references/thesis-craft.md',
     'references/argumentative-craft.md', 'references/speech-craft.md',
     'references/poetry-craft.md', 'references/prose-flow-craft.md',
+    'references/han-prose-grammar.md',
     'references/argument-and-rhythm.md',
     'references/research-basis.md', 'references/source-evidence.md',
     'templates/quality-review.md',
@@ -76,6 +77,18 @@ class SkillStructureTests(unittest.TestCase):
                 self.assertNotIn(b'\0', data)
                 self.assertTrue(data.decode('utf-8').strip())
 
+
+    def test_han_prose_grammar_is_routed_without_quota(self):
+        """句层语法文档必须能从入口按需到达，且不把原库的阈值带进本技能。"""
+        doc = ROOT / 'references' / 'han-prose-grammar.md'
+        self.assertTrue(doc.is_file(), '缺少汉语行文决断文档')
+        body = doc.read_text(encoding='utf-8')
+        self.assertIn('不作验收门槛', body)
+        for entry in ('SKILL.md', 'references/routing.md', 'references/README.md', 'README.md'):
+            with self.subTest(entry=entry):
+                self.assertIn('han-prose-grammar.md',
+                              (ROOT / entry).read_text(encoding='utf-8'),
+                              f'{entry} 未索引 han-prose-grammar.md')
 
     def test_skill_and_readme_versions_agree(self):
         """版本号曾多次手工同步；这里把 SKILL 元数据、README 标题与最新版本节绑在一起。"""

@@ -4,7 +4,7 @@
 
 | 项目 | 说明 |
 |---|---|
-| 当前版本 | v0.57（程序与 lint 规则集 0.45） |
+| 当前版本 | v0.58（程序与 lint 规则集 0.45） |
 | 文档语言 | 简体中文 |
 | 运行依赖 | Python 3.8+，仅标准库，无需安装第三方包 |
 | 许可证 | [Apache-2.0](LICENSE) |
@@ -81,7 +81,7 @@ python -B scripts/writing_project.py checkpoint ./我的小说 --next "核读第
 
 每次任务先分清四个维度：**操作**（新写/续写/改稿/评阅/改编）→ **作品**（文体与媒介）→ **阶段**（立项/推进/修订/完结）→ **症状**（当前具体问题）。入口只有一条：[统一路由](references/routing.md)。旧 A–I 模式仅作兼容别名。
 
-按需加载，单次优先解决一两个主要问题，不把 62 份文档与规则台账塞进一次创作。这是本技能与“大而全提示词”的根本区别：**知识量不等于上下文里的字数量**。
+按需加载，单次优先解决一两个主要问题，不把 63 份文档与规则台账塞进一次创作。这是本技能与“大而全提示词”的根本区别：**知识量不等于上下文里的字数量**。
 
 ### 2. 知识、记录、程序三层分离
 
@@ -122,6 +122,7 @@ python -B scripts/writing_project.py checkpoint ./我的小说 --next "核读第
 | 解释 AI 检测报告 / 核验评分变化 | 口径核查与证据边界说明 | [检测证据与资料要求](references/detection-principles.md) |
 | 起标题、改标题 | 按数量要求给候选 | [标题工艺](references/title-craft.md) |
 | 新写短篇、散文、诗歌、文章 | 正文成稿 | [统一路由](references/routing.md) |
+| 句子别扭、重心不清、修饰语堆叠、收尾发虚 | 句层诊断与逐类修订 | [汉语行文决断](references/han-prose-grammar.md) |
 | 写议论文 / 评论 / 驳论文 | 争点分层、材料与授权、让步—反驳 | [议论文工艺](references/argumentative-craft.md) |
 | 期刊 / 会议论文 | 摘要双模型、强度与证据闭合、审稿回复信 | [学术工艺](references/academic-craft.md) |
 | 研究生学位论文 / 开题 / 答辩 | 先取本校现行稿约、跨章一致、引用闭合与披露 | [学位论文工艺](references/thesis-craft.md) |
@@ -142,7 +143,7 @@ humanize-writing/
 ├── README.md                # 本文件：定位、原理、功能与用法
 ├── CHANGELOG.md             # 版本变更记录
 ├── LICENSE                  # Apache-2.0
-├── references/              # 62 份按需读取的工艺、流程与证据文档 + 规则台账
+├── references/              # 63 份按需读取的工艺、流程与证据文档 + 规则台账
 │   ├── README.md            # 分类索引（建议从这里进入）
 │   ├── routing.md           # 唯一任务分派入口
 │   ├── editing-workflow.md  # 改稿 / 评阅 / 停止条件
@@ -156,7 +157,7 @@ humanize-writing/
 │   ├── ledger_check.py      # 6 组台账检查
 │   ├── ai_smell_lint.py     # 静态写作线索扫描
 │   └── compare_report.py    # 改前改后对比报告
-└── tests/                   # 17 组、231 项单元测试 + selftest + 6 套冻结语料
+└── tests/                   # 17 组、236 项单元测试 + selftest + 6 套冻结语料
 ```
 
 ## 命令行工具
@@ -267,8 +268,8 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --seman
 
 | 项目 | 现状 |
 |---|---|
-| 自动化测试 | 231 项 unittest 全部通过；`selftest.py` RC=0 |
-| 结构审计 | 572 个文件（文本 568）UTF-8 / LF；本地链接可达；62 篇 references 均有加载入口 |
+| 自动化测试 | 236 项 unittest 全部通过；`selftest.py` RC=0 |
+| 结构审计 | 573 个文件全部 UTF-8 / LF；本地链接可达；63 篇 references 均有加载入口 |
 | 规则台账 | 41 条（加权 16 / 观察 15 / 状态 10），探针逐条驱动 |
 | 冻结语料 | 6 套（含 HC3 与 CReD 配对集），方向测试锁定权重 |
 | 端到端 | `init` → 写章 → `lint` → 改写 → `compare_report` → `checkpoint` → `check` |
@@ -280,7 +281,7 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --seman
 
 - v0.38：81 项自动测试；完成 4015 汉字六章短篇网文（含文件交接续写）与 2252 汉字三集九场微型剧本，均为模型辅助评阅的完整草稿。
 - v0.39–v0.40：追加文学选段实改、连载局部只读评阅与新写短请求试用，保留首轮缺陷与修正记录。
-- v0.41–v0.57：主要调整文档、lint 计分口径与输入解码；规则集与分数未变，跨版本分数变化不能当作文风改善。
+- v0.41–v0.58：主要调整文档、lint 计分口径与输入解码；规则集与分数未变，跨版本分数变化不能当作文风改善。
 
 各版本改动与验证证据见 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -299,7 +300,7 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --seman
 
 ## 文档索引
 
-- [references/README.md](references/README.md)：62 份文档与规则台账的分类索引（路由 / 流程 / 小说工艺 / 文体 / 边界与检测 / 研究档案）。
+- [references/README.md](references/README.md)：63 份文档与规则台账的分类索引（路由 / 流程 / 小说工艺 / 文体 / 边界与检测 / 研究档案）。
 - [templates/README.md](templates/README.md)：模板分工、每章更新、整书核读与台账检查语义。
 - [SKILL.md](SKILL.md)：智能体执行入口，含任务分派表与共同边界。
 

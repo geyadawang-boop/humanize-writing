@@ -74,6 +74,8 @@
 | 比喻、象征、重复、留白失效 | [rhetoric-craft.md](rhetoric-craft.md) | 首次建立与后续变形/兑现 |
 | 无依据的反衬/拉踩、虚假二选一、碎短句、对仗工整过度或段落套式重复 | [argument-and-rhythm.md](argument-and-rhythm.md)；具体段落衔接再读prose-flow-craft | 前项的依据、两项实际关系、停顿是否切断语义、工整是否添空话或挤掉信息；保留有功能的比较、短句和指定形式 |
 | 润色后原意变强、否定或程度失真、关联变因果、感知标记被误删 | [sentence-discipline.md](sentence-discipline.md)；人物判断归属再读[viewpoint-craft.md](viewpoint-craft.md) | 对照原句的范围、证据强度、行动者和知情时点；不靠删词数判断改善 |
+| 句子重心不明、该记的成分记不住；修饰语堆在名词前；连词位置别扭；段末收不住 | [han-prose-grammar.md](han-prose-grammar.md) | 宾主、定语层次与“的”的隐现、状语位置、两组连词的位置、末句分量；比喻与详略仍回原专章 |
+| 句子读着像翻译、被动与抽象主语过多、断点落在词中间 | [han-prose-grammar.md](han-prose-grammar.md) 第四、五节 + [sentence-discipline.md](sentence-discipline.md) | “被”是否必要、受事能否直接作主语、停顿是否落在直接成分之间 |
 | 文风偏移、句子拧巴 | [style-spectrum-craft.md](style-spectrum-craft.md)、[style-craft.md](style-craft.md)、[sentence-discipline.md](sentence-discipline.md) | 用户样本、叙事距离、原句信息 |
 | 首尾呼应、回环或稳定人物被强造变化，结尾被压成短句 | [narratology-craft.md](narratology-craft.md)第五节；长篇再看[小说流程](novel-workflow.md) | 原定返回方式、人物状态、重复的实际作用与待兑现承诺；保留指定整段复现 |
 | 书信/档案/第二人称或实验叙事 | [form-devices-craft.md](form-devices-craft.md) + [narratology-craft.md](narratology-craft.md) | 装置是否改变信息分配，有没有读者入口 |

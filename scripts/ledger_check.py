@@ -189,9 +189,29 @@ def col_of(table, needle):
     return matches[0] if len(matches) == 1 else None
 
 
+def decode_bytes(data):
+    """按 BOM 与常见中文编码解码；行尾统一为 LF，顺序与 ai_smell_lint 保持一致。"""
+    text = None
+    for bom, enc in ((b"\xff\xfe\x00\x00", "utf-32"), (b"\x00\x00\xfe\xff", "utf-32"),
+                     (b"\xff\xfe", "utf-16"), (b"\xfe\xff", "utf-16")):
+        if data.startswith(bom):
+            text = data.decode(enc)
+            break
+    if text is None:
+        for enc in ("utf-8-sig", "gbk"):
+            try:
+                text = data.decode(enc)
+                break
+            except UnicodeDecodeError:
+                continue
+    if text is None:
+        text = data.decode("utf-8", errors="replace")
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def read(path):
-    with open(path, 'r', encoding='utf-8-sig') as handle:
-        return handle.read()
+    with open(path, 'rb') as handle:
+        return decode_bytes(handle.read())
 
 
 def _without_fenced_code(content):
