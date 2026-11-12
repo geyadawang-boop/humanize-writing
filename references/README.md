@@ -1,6 +1,6 @@
 # references：知识索引
 
-本目录存放技能的工艺、流程、边界与研究文档，共 64 份，外加 1 份机器可读的规则台账。**不要整目录阅读**：先由 [统一路由](routing.md) 判定任务，再按症状加载一至三份；单次优先解决一两个主要问题。
+本目录存放技能的工艺、流程、边界与研究文档，共 78 份，外加 1 份机器可读的规则台账。**不要整目录阅读**：先由 [统一路由](routing.md) 判定任务，再按症状加载一至三份；单次优先解决一两个主要问题。
 
 ## 一、入口与地图
 
@@ -29,7 +29,7 @@
 
 | 文档 | 用途 |
 |---|---|
-| [novel-craft.md](novel-craft.md) | 长篇小说综合工艺：架构、分卷、人物、伏笔、平台机制、命名、感情线、转场 |
+| [novel-craft.md](novel-craft.md) | 长篇小说决策指南：按问题进入架构、平台、命名、感情线、转场、痛点、无限流、中期管理分册 |
 | [structure-craft.md](structure-craft.md) | 结构收口：高潮准备、事件密度、章末钩子、情感曲线、多线编织、开头/结尾类型学 |
 | [character-craft.md](character-craft.md) | 人物：声音指纹、弧光类型、情感台阶、动机深化、配角功能、前史与退场 |
 | [viewpoint-craft.md](viewpoint-craft.md) | 视角与叙事声音：人称、Deep POV、叙事距离、不可靠叙述、多 POV、跳脑 |
@@ -41,7 +41,7 @@
 | [spinoff-craft.md](spinoff-craft.md) | 番外与支线：五类番外、支线开合、三种咬合、防失控 |
 | [timeline-craft.md](timeline-craft.md) | 叙事时序与场景工程 |
 | [spatial-narrative-craft.md](spatial-narrative-craft.md) | 空间叙事：场所、动线与空间中的信息释放 |
-| [description-craft.md](description-craft.md) | 描写方法与章节精读 |
+| [description-craft.md](description-craft.md) | 描写决策指南：总论、自检清单与五个主题分册 |
 | [dialogue-craft.md](dialogue-craft.md) | 对白：潜台词、信息差、节奏与权力、群戏、沉默与停顿 |
 | [prose-flow-craft.md](prose-flow-craft.md) | 句段工艺：衔接、意合流水句、节奏判据、主述位推进、详略、文气、炼字 |
 | [sentence-discipline.md](sentence-discipline.md) | 句子级编辑：语义、修饰、抽象、关系、指称 |
@@ -56,6 +56,27 @@
 | [wordlists.md](wordlists.md) | 常见模板表达与检查词表（中英文） |
 | [deai-techniques.md](deai-techniques.md) | 去模板感的编辑技法（编辑参考，不是检测承诺） |
 | [long-term-training.md](long-term-training.md) | 长期训练：习惯、练习、阅读与工具箱 |
+
+### 长篇与描写分册
+
+原 `novel-craft.md`（127 KB）与 `description-craft.md`（76 KB）拆为决策指南加主题分册。主文件只留索引、总论/清单与来源说明；写具体问题时只加载对应分册。
+
+| 文档 | 用途 |
+|---|---|
+| [novel-architecture.md](novel-architecture.md) | 长篇前期架构：世界五层、势力、力量体系、分卷、人物网、伏笔总账 |
+| [webnovel-platform-craft.md](webnovel-platform-craft.md) | 网文连载机制与平台：调性、五维路由、黄金三章、章末钩子、更新与完本 |
+| [character-naming-craft.md](character-naming-craft.md) | 角色命名七法、公式、正反例与书目 |
+| [romance-line-craft.md](romance-line-craft.md) | 感情线七法、CP 感、甜虐节奏 |
+| [scene-transition-craft.md](scene-transition-craft.md) | 场景转场六法：切镜、蒙太奇、公式与正反例 |
+| [novel-pain-repetition.md](novel-pain-repetition.md) | 痛点一：物象复现与描写层重复的词库、黑名单与治疗 |
+| [novel-pain-diagnosis.md](novel-pain-diagnosis.md) | 四病同源、痛点二至四与联检总表 |
+| [infinite-flow-craft.md](infinite-flow-craft.md) | 无限流：五子类、副本、积分、主神与自查 |
+| [mid-story-management.md](mid-story-management.md) | 中期剧情管理：改纲、伏笔回收、崩盘救场、追读 |
+| [description-environment.md](description-environment.md) | 环境描写：三层镜头、切换、主次、环境伏笔、情景交融 |
+| [description-techniques.md](description-techniques.md) | 白描/细描/工笔、五感通感、动态描写 |
+| [description-show-tell.md](description-show-tell.md) | Show, don't tell：四方法、比例法则、两稿法 |
+| [description-objects.md](description-objects.md) | 八类描写对象总表与各类要害 |
+| [description-close-reading.md](description-close-reading.md) | 三篇范文精读、六维框架、精读五步 |
 
 ## 四、文体与题材
 

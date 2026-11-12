@@ -7,7 +7,7 @@
 | 任务 | 阅读入口 | 应交付实物 | 能力边界 |
 |---|---|---|---|
 | 润色、改对白、改场景 | genre-router；对应 craft | 约定范围的修订正文 | 不强加整部长篇建档 |
-| 短篇/长篇小说从构想到完稿 | [novel-workflow.md](novel-workflow.md)；按症状查 novel-craft | 必要设定、全部章节正文、修订与完结记录 | 有执行框架；模板数量不证明故事成立或文学品质 |
+| 短篇/长篇小说从构想到完稿 | [novel-workflow.md](novel-workflow.md)；按症状查 novel-craft 分册 | 必要设定、全部章节正文、修订与完结记录 | 有执行框架；模板数量不证明故事成立或文学品质 |
 | 电影/影视剧集完整初稿 | [screenplay-workflow.md](screenplay-workflow.md)、[chinese-screenplay-format.md](chinese-screenplay-format.md) | 总纲、分场/分集、全部正文、时长与结尾核验 | 不保证投拍、发行或商业成功 |
 | 竖屏短剧、短片及其他短时长影像 | screenplay-workflow、中文格式 | 约定集数与时长内的完整故事 | 画幅、时长、商业模式分别判断；平台流量公式另核 |
 | 舞台/广播/音频剧 | screenplay-workflow 媒介分支 | 可演/可听的完整正文与提示 | 复杂调度、声学、音乐、制作预算须专项补证 |

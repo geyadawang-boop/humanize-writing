@@ -122,6 +122,29 @@ class SkillStructureTests(unittest.TestCase):
         for token in ('零权重观察**：', '频率门（v0.59）**'):
             self.assertNotIn(token, skill, f'入口又内嵌了规则细节：{token}')
 
+    def test_long_references_are_split_by_topic(self):
+        """两篇长文档必须保持「决策指南 + 分册」，防止细节再次堆回单文件。"""
+        cases = {
+            'novel-craft.md': (
+                'novel-architecture.md', 'webnovel-platform-craft.md',
+                'character-naming-craft.md', 'romance-line-craft.md',
+                'scene-transition-craft.md', 'novel-pain-repetition.md',
+                'novel-pain-diagnosis.md', 'infinite-flow-craft.md',
+                'mid-story-management.md'),
+            'description-craft.md': (
+                'description-environment.md', 'description-techniques.md',
+                'description-show-tell.md', 'description-objects.md',
+                'description-close-reading.md'),
+        }
+        caps = {'novel-craft.md': 40000, 'description-craft.md': 30000}
+        for main, parts in cases.items():
+            text = (ROOT / 'references' / main).read_text(encoding='utf-8')
+            self.assertLessEqual(len(text.encode('utf-8')), caps[main],
+                                 f'{main} 又变厚了，应把细节拆到分册')
+            for part in parts:
+                self.assertTrue((ROOT / 'references' / part).is_file(), part)
+                self.assertIn(f'({part})', text, f'{main} 未链接 {part}')
+
     def test_npm_package_metadata_matches_skill(self):
         """npm 包只做内容分发：名称、许可证、版本与 files 白名单必须和技能一致。"""
         pkg_path = ROOT / 'package.json'

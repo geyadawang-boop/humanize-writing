@@ -24,7 +24,7 @@
 |---|---|---|---|
 | 短篇/中篇小说 | [by-genre.md](by-genre.md)小说节 + [structure-craft.md](structure-craft.md) | 人物、视角、对白专章 | 有完整事件与结束，不以梗概替代正文 |
 | 定长长篇小说（文学或类型） | [novel-workflow.md](novel-workflow.md)的整部长篇分支 + [project-workflow.md](project-workflow.md) | 结构、人物、视角、主题与相关题材资料 | 全书因果、群像/支线、完整正文与整书修订；不强套升级和日更 |
-| 长篇网文/滚动连载 | novel-workflow的连载分支 + project-workflow | novel-craft相关节、分卷承诺、更新与反馈记录 | 按章推进、卷间承接、跨会话恢复；区分阶段交付与全书完结 |
+| 长篇网文/滚动连载 | novel-workflow的连载分支 + project-workflow | novel-craft 分册相关节、分卷承诺、更新与反馈记录 | 按章推进、卷间承接、跨会话恢复；区分阶段交付与全书完结 |
 | 电影剧本 | [screenplay-workflow.md](screenplay-workflow.md) | [chinese-screenplay-format.md](chinese-screenplay-format.md)或明确要求的好莱坞格式 | 整部连续场景与结局 |
 | 电视剧/横屏网剧 | 剧本工作流的分集结构 | 中文格式、分集大纲与A/B线 | 全季主线与每集目标均覆盖 |
 | 竖屏微短剧 | 剧本工作流的短剧分支 | 中文格式与场景成本 | 全部约定集数；钩子、兑现、终局相连 |

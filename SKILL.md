@@ -28,7 +28,7 @@ metadata:
 | 电影 / 电视剧 / 短剧 / 话剧 / 广播剧 | [剧本全程流程](references/screenplay-workflow.md) | 先定媒介与交付格式；连续项目再读项目执行 |
 | 小说改剧本 / 剧本转小说 / 多种交付物 | [统一路由](references/routing.md)的改编分支 | 源作事实与目标媒介分别管理，逐项验收 |
 | 查知识覆盖、路由或整部创作能力 | [知识与能力地图](references/knowledge-map.md)；需要补料时读[资料补充与验证](references/material-intake.md) | 区分知识缺口、作品需求缺口与长篇验证缺口；只索取有明确用途的材料 |
-| 找不到对应主题 / 需要全量文档清单 | [知识库总索引](references/README.md) | 64 篇文档按用途分组；先查索引再按需加载，不整目录通读 |
+| 找不到对应主题 / 需要全量文档清单 | [知识库总索引](references/README.md) | 78 篇文档按用途分组；先查索引再按需加载，不整目录通读 |
 
 校园/青春题材按上述交付物选主流程，再按需追加[校园创作指南](references/campus-youth-craft.md)；涉及中国影视制作/公开播出的审校时，再查[内容与未成年人边界](references/china-screen-content-boundaries.md)。不能仅因“校园”关键词把小说改派为儿童节目或法律审查。
 
