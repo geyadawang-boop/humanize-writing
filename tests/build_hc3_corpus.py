@@ -21,6 +21,8 @@ import urllib.request
 BASE = "https://www.modelscope.cn/api/v1/datasets/simpleai/HC3-Chinese"
 DEST = pathlib.Path(__file__).resolve().parent / "corpus_hc3"
 UA = {"User-Agent": "Mozilla/5.0"}
+# 默认验证 TLS 证书；仅当目标站证书链异常且用户显式 --insecure 时降级。
+INSECURE = False
 
 SRC_SHA = {
     "law.jsonl": "03993cd7d9e1c1e277927f599760c85083d928f65cec7d9c99cc3641b557309c",
@@ -59,8 +61,9 @@ def fetch(name, raw_dir):
         return p.read_bytes()
     url = BASE + "/repo?Revision=master&FilePath=" + urllib.parse.quote(name)
     ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
+    if INSECURE:
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
     req = urllib.request.Request(url, headers=UA)
     data = urllib.request.urlopen(req, timeout=180, context=ctx).read()
     p.write_bytes(data)
@@ -128,7 +131,14 @@ def main():
         default=str(pathlib.Path(tempfile.gettempdir()) / "hc3_raw"),
         help="源 jsonl 缓存目录（默认放系统临时目录，避免把数 MB 原始语料写进技能树）",
     )
+    ap.add_argument(
+        "--insecure",
+        action="store_true",
+        help="仅在目标站证书链异常时使用；源文件 SHA-256 校验仍强制",
+    )
     args = ap.parse_args()
+    global INSECURE
+    INSECURE = args.insecure
     raw_dir = pathlib.Path(args.raw)
     raw_dir.mkdir(parents=True, exist_ok=True)
     try:

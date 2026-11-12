@@ -1,0 +1,118 @@
+{
+  "version": "0.60",
+  "built": "2026-11-12",
+  "source": {
+    "name": "HC3-Chinese (Human ChatGPT Comparison Corpus, 中文版)",
+    "url": "https://huggingface.co/datasets/Hello-SimpleAI/HC3-Chinese",
+    "mirror": "https://www.modelscope.cn/api/v1/datasets/simpleai/HC3-Chinese",
+    "paper": "https://arxiv.org/abs/2301.07597",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "upstream_sha256": "425e7071bbd5dd88efd85d51e28a5adec9c72e04d96c52d194bdfb95fef00b0d",
+    "expected_sha256": "425e7071bbd5dd88efd85d51e28a5adec9c72e04d96c52d194bdfb95fef00b0d",
+    "sha_matches_expected": true
+  },
+  "fields": [
+    "id",
+    "domain",
+    "human",
+    "ai",
+    "human_len",
+    "ai_len",
+    "source",
+    "license"
+  ],
+  "note": "上游 prompt（question）未随包分发；同一 id 的人类/AI 回答来自同一 prompt。",
+  "filters": {
+    "min_cjk": 80,
+    "max_cjk": 1200,
+    "domains_included": [
+      "baike",
+      "finance",
+      "law",
+      "nlpcc_dbqa",
+      "open_qa"
+    ],
+    "excluded_domains": [
+      "psychology",
+      "medicine"
+    ],
+    "risk_words": [
+      "自杀",
+      "自残",
+      "轻生",
+      "遗书",
+      "抑郁",
+      "焦虑症",
+      "精神分裂",
+      "色情",
+      "裸照",
+      "性行为",
+      "强奸",
+      "猥亵",
+      "约炮",
+      "吸毒",
+      "毒品",
+      "赌博",
+      "博彩",
+      "杀人",
+      "凶杀",
+      "虐童"
+    ],
+    "privacy_stripped": [
+      "URL",
+      "email",
+      "phone"
+    ],
+    "skipped": {
+      "short": 5172,
+      "risk": 0,
+      "dup": 305,
+      "domain": 2173
+    }
+  },
+  "totals": {
+    "pairs": 5203
+  },
+  "splits": {
+    "train": {
+      "path": "corpora/pairs/hc3_train.jsonl",
+      "pairs": 3667,
+      "sha256": "83c9faaf8ed46e1f17cea088e47d1b80fadf40e73d00182fa87774eb91b6630d"
+    },
+    "cal": {
+      "path": "corpora/pairs/hc3_cal.jsonl",
+      "pairs": 823,
+      "sha256": "777fa9811b557cf89b7b6d6e5b4f9f2c31c0d48ebd127cc48b1db8209c6cc236"
+    },
+    "test": {
+      "path": "corpora/pairs/hc3_test.jsonl",
+      "pairs": 713,
+      "sha256": "da51b874e392aa27c45e84b56e34e6fb99b54a8d468b73a1274f8e06763870b0"
+    }
+  },
+  "split_rule": "sha256(id) 取模 1000 → 700/150/150，同 id 不跨切分",
+  "domain_counts": {
+    "train": {
+      "open_qa": 1414,
+      "baike": 1974,
+      "finance": 148,
+      "nlpcc_dbqa": 98,
+      "law": 33
+    },
+    "cal": {
+      "baike": 437,
+      "open_qa": 336,
+      "finance": 30,
+      "nlpcc_dbqa": 14,
+      "law": 6
+    },
+    "test": {
+      "baike": 354,
+      "open_qa": 307,
+      "finance": 28,
+      "nlpcc_dbqa": 20,
+      "law": 4
+    }
+  }
+}

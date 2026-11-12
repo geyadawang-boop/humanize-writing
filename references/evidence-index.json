@@ -1,0 +1,457 @@
+{
+  "version": "0.60",
+  "updated": "2026-11-12",
+  "evidence_base": "references/detection-evidence.md",
+  "note": "evidence_ids 指向 detection-evidence.md 第 8 节编号；measured_v060 为同一语料（5203 对）实测。",
+  "rules": [
+    {
+      "tag": "[AI 词]",
+      "kind": "weighted",
+      "weight": "同词 min(12, 4×次数)（≥2 次）；或不同套话 ≥3 种且 ≥2 种/千字 → min(16, 4×种数)。单次命中 0 分",
+      "evidence_ids": [
+        "E34",
+        "E19"
+      ],
+      "rationale": "超额词/词汇偏好研究支持词表级群体信号；本项目问答语料上方向弱，单词单次不判。",
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 2.3,
+        "ai_rate_pct": 1.5,
+        "diff_pp": -0.8,
+        "mean_weight_human": 0.8,
+        "mean_weight_ai": 0.8,
+        "verdict": "两侧命中率相差 <5 个百分点（不足以支撑该规则）"
+      }
+    },
+    {
+      "tag": "[路标词]",
+      "kind": "observation",
+      "weight": "0（v0.44 起观察）",
+      "evidence_ids": [
+        "E18",
+        "E19"
+      ],
+      "rationale": "连接与句法组织属于语境依赖特征；实测人类侧反而略多。",
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 9.2,
+        "ai_rate_pct": 6.0,
+        "diff_pp": -3.2,
+        "mean_weight_human": 0,
+        "mean_weight_ai": 0,
+        "verdict": "两侧命中率相差 <5 个百分点（不足以支撑该规则）"
+      }
+    },
+    {
+      "tag": "[段首序数]",
+      "kind": "observation",
+      "weight": "0（v0.44 起观察）",
+      "evidence_ids": [
+        "E18",
+        "E19"
+      ],
+      "rationale": "顺序编号是体裁结构，不是来源指纹。"
+    },
+    {
+      "tag": "[常见小说表达]",
+      "kind": "weighted",
+      "weight": "5（≥3 种）/ 3（2 种）",
+      "evidence_ids": [
+        "E31",
+        "E19"
+      ],
+      "rationale": "小说套路属叙事层与语料层，需结合情节功能判断。"
+    },
+    {
+      "tag": "[程度用语]",
+      "kind": "weighted",
+      "weight": "4/词（同一词 ≥ max(3, 2 处/千字)）",
+      "evidence_ids": [
+        "E19",
+        "E32"
+      ],
+      "rationale": "程度副词承担人物声口；改写研究显示强度表达会被规范化。",
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 0.1,
+        "ai_rate_pct": 0.5,
+        "diff_pp": 0.4,
+        "mean_weight_human": 4,
+        "mean_weight_ai": 4,
+        "verdict": "两侧命中率相差 <5 个百分点（不足以支撑该规则）"
+      }
+    },
+    {
+      "tag": "[AI 句式]",
+      "kind": "weighted",
+      "weight": "5（达到千字密度阈值：不仅…还 1.5 处/千字，随着/在当今 1.0 处/千字；下限 2 处）",
+      "evidence_ids": [
+        "E19",
+        "E16"
+      ],
+      "rationale": "句式模板在同域有效、跨域漂移；按密度取阈而非单次命中。"
+    },
+    {
+      "tag": "[对照句式]",
+      "kind": "observation",
+      "weight": "0（v0.41 起只定位复读）",
+      "evidence_ids": [
+        "E19"
+      ],
+      "rationale": "对仗与对照是正常修辞，零权重只定位。"
+    },
+    {
+      "tag": "[顿号连排]",
+      "kind": "weighted",
+      "weight": "min(8, 4×处数)（≥2 处；单处 0 分）",
+      "evidence_ids": [
+        "E17",
+        "E19"
+      ],
+      "rationale": "并列清单是排版与体裁习惯；实测方向不稳定。",
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 13.7,
+        "ai_rate_pct": 14.8,
+        "diff_pp": 1.1,
+        "mean_weight_human": 1.9,
+        "mean_weight_ai": 1.6,
+        "verdict": "两侧命中率相差 <5 个百分点（不足以支撑该规则）"
+      }
+    },
+    {
+      "tag": "[冒号列表]",
+      "kind": "weighted",
+      "weight": "5（≥2 处）",
+      "evidence_ids": [
+        "E16"
+      ],
+      "rationale": "清单式结构属体裁特征，跨域泛化差。"
+    },
+    {
+      "tag": "[四字套话]",
+      "kind": "weighted",
+      "weight": "6（≥3 对且 ≥2 对/300 字）",
+      "evidence_ids": [
+        "E34"
+      ],
+      "rationale": "四字套话属超额词族，需成簇才计。"
+    },
+    {
+      "tag": "[文艺比喻]",
+      "kind": "weighted",
+      "weight": "8（≥2 处且 ≥1/300 字）",
+      "evidence_ids": [
+        "E31"
+      ],
+      "rationale": "比喻密度属叙事风格，不能单独判来源。",
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 0.4,
+        "ai_rate_pct": 0.1,
+        "diff_pp": -0.3,
+        "mean_weight_human": 8,
+        "mean_weight_ai": 8,
+        "verdict": "两侧命中率相差 <5 个百分点（不足以支撑该规则）"
+      }
+    },
+    {
+      "tag": "[抽象名词化]",
+      "kind": "weighted",
+      "weight": "5（≥2 处；单处 0 分）",
+      "evidence_ids": [
+        "E19",
+        "E32"
+      ],
+      "rationale": "名词化是正式语体特征，改写会抬高书面度。"
+    },
+    {
+      "tag": "[总结式结尾]",
+      "kind": "weighted",
+      "weight": "8（全文总结路标 ≥2 处；单处 0 分）",
+      "evidence_ids": [
+        "E16",
+        "E19"
+      ],
+      "rationale": "收束功能正常；重复总结路标才作提示。",
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 0.2,
+        "ai_rate_pct": 2.6,
+        "diff_pp": 2.4,
+        "mean_weight_human": 2.2,
+        "mean_weight_ai": 0,
+        "verdict": "两侧命中率相差 <5 个百分点（不足以支撑该规则）"
+      }
+    },
+    {
+      "tag": "[结尾]",
+      "kind": "observation",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [],
+      "rationale": "状态/观察行，不参与计分，无外部证据需求。"
+    },
+    {
+      "tag": "[展望式收尾]",
+      "kind": "weighted",
+      "weight": "8（末尾窗口 ≥2 处；单处 0 分）",
+      "evidence_ids": [
+        "E16"
+      ],
+      "rationale": "祝愿/展望属文体功能，堆叠才提示。"
+    },
+    {
+      "tag": "[段落开头]",
+      "kind": "weighted",
+      "weight": "5（同一开头 ≥3 段）",
+      "evidence_ids": [
+        "E17"
+      ],
+      "rationale": "段首重复是结构特征，跨语料方向不稳。",
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 2.0,
+        "ai_rate_pct": 3.5,
+        "diff_pp": 1.5,
+        "mean_weight_human": 5,
+        "mean_weight_ai": 5,
+        "verdict": "两侧命中率相差 <5 个百分点（不足以支撑该规则）"
+      }
+    },
+    {
+      "tag": "[段内枚举]",
+      "kind": "weighted",
+      "weight": "6",
+      "evidence_ids": [
+        "E18"
+      ],
+      "rationale": "一是/二是属平行结构，技术与公文文体豁免。"
+    },
+    {
+      "tag": "[礼貌框架]",
+      "kind": "weighted",
+      "weight": "6",
+      "evidence_ids": [
+        "E10"
+      ],
+      "rationale": "礼貌性套话是指令微调痕迹之一，不是作者指纹。"
+    },
+    {
+      "tag": "[句长]",
+      "kind": "observation",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [
+        "E19",
+        "E20"
+      ],
+      "rationale": "句长分布是零权重观察；公开研究亦显示跨域不稳。",
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 68.5,
+        "ai_rate_pct": 82.9,
+        "diff_pp": 14.4,
+        "mean_weight_human": 0,
+        "mean_weight_ai": 0,
+        "verdict": "AI 侧命中率更高（方向与本规则一致）"
+      }
+    },
+    {
+      "tag": "[短句]",
+      "kind": "observation",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [
+        "E19"
+      ],
+      "rationale": "短句占比零权重；口语与叙事天然短。"
+    },
+    {
+      "tag": "[段落]",
+      "kind": "observation",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [
+        "E17"
+      ],
+      "rationale": "段长只观察，不设目标区间。"
+    },
+    {
+      "tag": "[锚点]",
+      "kind": "observation",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [
+        "E26"
+      ],
+      "rationale": "数字/地名等具体性可被翻译与改写改变，不作真伪判据。"
+    },
+    {
+      "tag": "[分行]",
+      "kind": "observation",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [
+        "E16"
+      ],
+      "rationale": "分行文本的句长测量会失效，只作测量说明。"
+    },
+    {
+      "tag": "[分行结构]",
+      "kind": "observation",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [
+        "E16"
+      ],
+      "rationale": "同上。"
+    },
+    {
+      "tag": "[概览]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [],
+      "rationale": "状态/观察行，不参与计分，无外部证据需求。"
+    },
+    {
+      "tag": "[genre]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [],
+      "rationale": "状态/观察行，不参与计分，无外部证据需求。"
+    },
+    {
+      "tag": "[短文本]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [],
+      "rationale": "状态/观察行，不参与计分，无外部证据需求。"
+    },
+    {
+      "tag": "[有限词表扫描：语言未确认]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [],
+      "rationale": "状态/观察行，不参与计分，无外部证据需求。"
+    },
+    {
+      "tag": "[X 级]",
+      "kind": "observation",
+      "weight": "0（观察）",
+      "evidence_ids": [
+        "E19"
+      ],
+      "rationale": "人类文本同样触发的特征，零权重防误改。"
+    },
+    {
+      "tag": "[X 指纹]",
+      "kind": "observation",
+      "weight": "0（观察）",
+      "evidence_ids": [
+        "E17"
+      ],
+      "rationale": "字符级分布随模型与语料变化，不设目标值。"
+    },
+    {
+      "tag": "[语义候选]",
+      "kind": "observation",
+      "weight": "0（观察）",
+      "evidence_ids": [
+        "E16"
+      ],
+      "rationale": "语义层候选需人工判读，本身不是问题。"
+    },
+    {
+      "tag": "[英文 AI 词]",
+      "kind": "weighted",
+      "weight": "同词 min(10, 2×次数)（≥2 次）；或不同套话 ≥3 种且 ≥2 种/千词 → min(10, 3×种数)。单次命中 0 分",
+      "evidence_ids": [
+        "E34",
+        "E19"
+      ],
+      "rationale": "英文超额词证据较强，但仍需频次门槛。"
+    },
+    {
+      "tag": "[英文总结式结尾]",
+      "kind": "weighted",
+      "weight": "8（全文总结路标 ≥2 处；单处 0 分）",
+      "evidence_ids": [
+        "E16"
+      ],
+      "rationale": "同中文，收束功能优先。"
+    },
+    {
+      "tag": "[不支持的文字范围]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [],
+      "rationale": "状态/观察行，不参与计分，无外部证据需求。"
+    },
+    {
+      "tag": "[无法判定]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [],
+      "rationale": "状态/观察行，不参与计分，无外部证据需求。"
+    },
+    {
+      "tag": "[语言声明不匹配]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [],
+      "rationale": "状态/观察行，不参与计分，无外部证据需求。"
+    },
+    {
+      "tag": "[语言范围]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [],
+      "rationale": "状态/观察行，不参与计分，无外部证据需求。"
+    },
+    {
+      "tag": "[英文词表模式（调用者声明）]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [],
+      "rationale": "状态/观察行，不参与计分，无外部证据需求。"
+    },
+    {
+      "tag": "[混合模式]",
+      "kind": "status",
+      "weight": "0（状态/观察行）",
+      "evidence_ids": [],
+      "rationale": "状态/观察行，不参与计分，无外部证据需求。"
+    },
+    {
+      "tag": "[翻译腔]",
+      "kind": "observation",
+      "weight": "0（v0.45 起观察）",
+      "evidence_ids": [
+        "E26",
+        "E32"
+      ],
+      "rationale": "翻译与改写会改变句法分布；本项目实测 AI 侧更高但历史语料方向相反。",
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 38.3,
+        "ai_rate_pct": 59.9,
+        "diff_pp": 21.6,
+        "mean_weight_human": 0,
+        "mean_weight_ai": 0,
+        "verdict": "AI 侧命中率更高（方向与本规则一致）"
+      }
+    },
+    {
+      "tag": "[相邻同构]",
+      "kind": "observation",
+      "weight": "0（v0.45 起观察）",
+      "evidence_ids": [
+        "E19"
+      ],
+      "rationale": "相邻句同构属节奏特征，经典散文同样高频。",
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 12.7,
+        "ai_rate_pct": 30.7,
+        "diff_pp": 18.0,
+        "mean_weight_human": 0,
+        "mean_weight_ai": 0,
+        "verdict": "AI 侧命中率更高（方向与本规则一致）"
+      }
+    }
+  ]
+}

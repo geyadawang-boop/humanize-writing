@@ -1,0 +1,441 @@
+{
+  "corpus": "corpora/pairs（HC3-Chinese 子集）",
+  "pairs": 5203,
+  "delta_definition": "2*AUC-1，正号=人类侧取值更高",
+  "features": {
+    "sent_len_mean": {
+      "label": "平均句长（汉字/句）",
+      "human_median": 37,
+      "ai_median": 32,
+      "delta": 0.298,
+      "auc": 0.649,
+      "per_domain_delta": {
+        "baike": 0.36,
+        "open_qa": 0.18,
+        "finance": 0.45,
+        "law": 0.23,
+        "nlpcc_dbqa": 0.6
+      }
+    },
+    "sent_len_sd": {
+      "label": "句长标准差",
+      "human_median": 14.46,
+      "ai_median": 8.57,
+      "delta": 0.481,
+      "auc": 0.74,
+      "per_domain_delta": {
+        "baike": 0.54,
+        "open_qa": 0.49,
+        "finance": 0.37,
+        "law": 0.23,
+        "nlpcc_dbqa": -0.22
+      }
+    },
+    "sent_len_cv": {
+      "label": "句长变异系数（SD/均值）",
+      "human_median": 0.43,
+      "ai_median": 0.27,
+      "delta": 0.428,
+      "auc": 0.714,
+      "per_domain_delta": {
+        "baike": 0.46,
+        "open_qa": 0.51,
+        "finance": 0.29,
+        "law": 0.24,
+        "nlpcc_dbqa": -0.24
+      }
+    },
+    "sent_len_entropy": {
+      "label": "句长分布熵（6 档）",
+      "human_median": 1.5,
+      "ai_median": 1.35,
+      "delta": 0.191,
+      "auc": 0.595,
+      "per_domain_delta": {
+        "baike": 0.32,
+        "open_qa": 0.14,
+        "finance": -0.04,
+        "law": -0.35,
+        "nlpcc_dbqa": -0.46
+      }
+    },
+    "short_sent_ratio": {
+      "label": "短句占比（<12 字）",
+      "human_median": 0.0,
+      "ai_median": 0.0,
+      "delta": 0.186,
+      "auc": 0.593,
+      "per_domain_delta": {
+        "baike": 0.11,
+        "open_qa": 0.33,
+        "finance": 0.08,
+        "law": 0.17,
+        "nlpcc_dbqa": 0.12
+      }
+    },
+    "long_sent_ratio": {
+      "label": "长句占比（>45 字）",
+      "human_median": 0.33,
+      "ai_median": 0.0,
+      "delta": 0.468,
+      "auc": 0.734,
+      "per_domain_delta": {
+        "baike": 0.48,
+        "open_qa": 0.43,
+        "finance": 0.62,
+        "law": 0.37,
+        "nlpcc_dbqa": 0.69
+      }
+    },
+    "comma_per_sent": {
+      "label": "每句逗号数",
+      "human_median": 1.56,
+      "ai_median": 1.25,
+      "delta": 0.282,
+      "auc": 0.641,
+      "per_domain_delta": {
+        "baike": 0.31,
+        "open_qa": 0.28,
+        "finance": 0.32,
+        "law": -0.1,
+        "nlpcc_dbqa": 0.29
+      }
+    },
+    "enum_comma_per_1000": {
+      "label": "顿号密度（每千汉字）",
+      "human_median": 0.0,
+      "ai_median": 6.1,
+      "delta": -0.172,
+      "auc": 0.414,
+      "per_domain_delta": {
+        "baike": -0.05,
+        "open_qa": -0.47,
+        "finance": 0.21,
+        "law": 0.3,
+        "nlpcc_dbqa": 0.07
+      }
+    },
+    "dash_per_1000": {
+      "label": "破折号密度（每千汉字）",
+      "human_median": 0.0,
+      "ai_median": 0.0,
+      "delta": 0.007,
+      "auc": 0.504,
+      "per_domain_delta": {
+        "baike": 0.02,
+        "open_qa": -0.01,
+        "finance": 0.0,
+        "law": 0.0,
+        "nlpcc_dbqa": 0.02
+      }
+    },
+    "quote_per_100": {
+      "label": "引号密度（每百汉字）",
+      "human_median": 0.0,
+      "ai_median": 0.0,
+      "delta": 0.137,
+      "auc": 0.568,
+      "per_domain_delta": {
+        "baike": 0.17,
+        "open_qa": 0.08,
+        "finance": 0.33,
+        "law": -0.02,
+        "nlpcc_dbqa": 0.15
+      }
+    },
+    "question_per_100": {
+      "label": "问号密度（每百汉字）",
+      "human_median": 0.0,
+      "ai_median": 0.0,
+      "delta": 0.071,
+      "auc": 0.536,
+      "per_domain_delta": {
+        "baike": 0.01,
+        "open_qa": 0.17,
+        "finance": -0.0,
+        "law": 0.02,
+        "nlpcc_dbqa": -0.01
+      }
+    },
+    "exclaim_per_100": {
+      "label": "感叹号密度（每百汉字）",
+      "human_median": 0.0,
+      "ai_median": 0.0,
+      "delta": 0.046,
+      "auc": 0.523,
+      "per_domain_delta": {
+        "baike": 0.0,
+        "open_qa": 0.11,
+        "finance": 0.0,
+        "law": 0.07,
+        "nlpcc_dbqa": 0.0
+      }
+    },
+    "colon_per_100": {
+      "label": "冒号密度（每百汉字）",
+      "human_median": 0.0,
+      "ai_median": 0.0,
+      "delta": 0.054,
+      "auc": 0.527,
+      "per_domain_delta": {
+        "baike": 0.15,
+        "open_qa": -0.06,
+        "finance": -0.01,
+        "law": 0.1,
+        "nlpcc_dbqa": -0.06
+      }
+    },
+    "punct_ratio": {
+      "label": "标点占全部字符比例",
+      "human_median": 0.08,
+      "ai_median": 0.08,
+      "delta": 0.02,
+      "auc": 0.51,
+      "per_domain_delta": {
+        "baike": 0.02,
+        "open_qa": -0.03,
+        "finance": 0.47,
+        "law": 0.38,
+        "nlpcc_dbqa": 0.23
+      }
+    },
+    "para_len_mean": {
+      "label": "平均段长（汉字/段）",
+      "human_median": 131,
+      "ai_median": 93,
+      "delta": 0.373,
+      "auc": 0.687,
+      "per_domain_delta": {
+        "baike": 0.0,
+        "open_qa": 0.81,
+        "finance": -0.53,
+        "law": 0.66,
+        "nlpcc_dbqa": -0.48
+      }
+    },
+    "para_len_sd": {
+      "label": "段长标准差",
+      "human_median": 0.0,
+      "ai_median": 0.0,
+      "delta": -0.087,
+      "auc": 0.457,
+      "per_domain_delta": {
+        "baike": 0.35,
+        "open_qa": -0.74,
+        "finance": 0.0,
+        "law": -0.84,
+        "nlpcc_dbqa": 0.0
+      }
+    },
+    "connective_per_1000": {
+      "label": "显性连接词密度（每千汉字）",
+      "human_median": 0.0,
+      "ai_median": 0.0,
+      "delta": -0.092,
+      "auc": 0.454,
+      "per_domain_delta": {
+        "baike": 0.06,
+        "open_qa": -0.23,
+        "finance": -0.43,
+        "law": -0.31,
+        "nlpcc_dbqa": -0.28
+      }
+    },
+    "stock_phrase_per_1000": {
+      "label": "套话密度（每千汉字）",
+      "human_median": 0.0,
+      "ai_median": 0.0,
+      "delta": -0.034,
+      "auc": 0.483,
+      "per_domain_delta": {
+        "baike": 0.07,
+        "open_qa": -0.14,
+        "finance": -0.19,
+        "law": -0.18,
+        "nlpcc_dbqa": -0.11
+      }
+    },
+    "de_per_1000": {
+      "label": "「的」密度（每千汉字）",
+      "human_median": 43.24,
+      "ai_median": 42.1,
+      "delta": 0.015,
+      "auc": 0.507,
+      "per_domain_delta": {
+        "baike": 0.23,
+        "open_qa": -0.16,
+        "finance": -0.62,
+        "law": -0.29,
+        "nlpcc_dbqa": -0.57
+      }
+    },
+    "particle_per_1000": {
+      "label": "体貌助词密度（了/着/过/地/得，每千汉字）",
+      "human_median": 11.77,
+      "ai_median": 10.53,
+      "delta": 0.084,
+      "auc": 0.542,
+      "per_domain_delta": {
+        "baike": -0.02,
+        "open_qa": 0.3,
+        "finance": -0.05,
+        "law": -0.36,
+        "nlpcc_dbqa": -0.23
+      }
+    },
+    "first_person_per_1000": {
+      "label": "第一人称密度（每千汉字）",
+      "human_median": 0.0,
+      "ai_median": 0.0,
+      "delta": 0.136,
+      "auc": 0.568,
+      "per_domain_delta": {
+        "baike": 0.03,
+        "open_qa": 0.31,
+        "finance": 0.28,
+        "law": -0.16,
+        "nlpcc_dbqa": -0.36
+      }
+    },
+    "second_person_per_1000": {
+      "label": "第二人称密度（每千汉字）",
+      "human_median": 0.0,
+      "ai_median": 0.0,
+      "delta": -0.103,
+      "auc": 0.449,
+      "per_domain_delta": {
+        "baike": -0.01,
+        "open_qa": -0.2,
+        "finance": -0.59,
+        "law": -0.35,
+        "nlpcc_dbqa": -0.36
+      }
+    },
+    "number_per_1000": {
+      "label": "阿拉伯数字密度（每千汉字）",
+      "human_median": 0.0,
+      "ai_median": 0.0,
+      "delta": 0.239,
+      "auc": 0.619,
+      "per_domain_delta": {
+        "baike": 0.24,
+        "open_qa": 0.21,
+        "finance": 0.45,
+        "law": 0.3,
+        "nlpcc_dbqa": 0.4
+      }
+    },
+    "char_ttr": {
+      "label": "汉字型例比（不同字/总字）",
+      "human_median": 0.6,
+      "ai_median": 0.54,
+      "delta": 0.27,
+      "auc": 0.635,
+      "per_domain_delta": {
+        "baike": -0.13,
+        "open_qa": 0.71,
+        "finance": 0.58,
+        "law": 0.66,
+        "nlpcc_dbqa": 0.24
+      }
+    },
+    "bigram_ttr": {
+      "label": "二元组型例比",
+      "human_median": 0.84,
+      "ai_median": 0.77,
+      "delta": 0.419,
+      "auc": 0.709,
+      "per_domain_delta": {
+        "baike": 0.06,
+        "open_qa": 0.79,
+        "finance": 0.62,
+        "law": 0.55,
+        "nlpcc_dbqa": 0.22
+      }
+    },
+    "hapax_ratio": {
+      "label": "仅出现一次的汉字占比",
+      "human_median": 0.4,
+      "ai_median": 0.33,
+      "delta": 0.293,
+      "auc": 0.647,
+      "per_domain_delta": {
+        "baike": -0.08,
+        "open_qa": 0.7,
+        "finance": 0.54,
+        "law": 0.62,
+        "nlpcc_dbqa": 0.21
+      }
+    },
+    "repeat_bigram_ratio": {
+      "label": "重复二元组占比",
+      "human_median": 0.16,
+      "ai_median": 0.23,
+      "delta": -0.419,
+      "auc": 0.291,
+      "per_domain_delta": {
+        "baike": -0.06,
+        "open_qa": -0.79,
+        "finance": -0.62,
+        "law": -0.55,
+        "nlpcc_dbqa": -0.22
+      }
+    },
+    "latin_ratio": {
+      "label": "拉丁字母占比",
+      "human_median": 0.01,
+      "ai_median": 0.0,
+      "delta": 0.137,
+      "auc": 0.568,
+      "per_domain_delta": {
+        "baike": 0.2,
+        "open_qa": 0.1,
+        "finance": 0.11,
+        "law": -0.02,
+        "nlpcc_dbqa": -0.25
+      }
+    },
+    "list_marker_per_1000": {
+      "label": "行首编号/项目符号密度（每千汉字）",
+      "human_median": 0.0,
+      "ai_median": 0.0,
+      "delta": -0.013,
+      "auc": 0.493,
+      "per_domain_delta": {
+        "baike": 0.0,
+        "open_qa": -0.04,
+        "finance": 0.0,
+        "law": 0.03,
+        "nlpcc_dbqa": 0.0
+      }
+    },
+    "summary_marker_per_1000": {
+      "label": "总结路标密度（每千汉字）",
+      "human_median": 0.0,
+      "ai_median": 0.0,
+      "delta": -0.098,
+      "auc": 0.451,
+      "per_domain_delta": {
+        "baike": -0.01,
+        "open_qa": -0.22,
+        "finance": -0.1,
+        "law": -0.12,
+        "nlpcc_dbqa": -0.09
+      }
+    },
+    "para_start_repeat": {
+      "label": "段首重复率（最高频两字开头占比）",
+      "human_median": 1.0,
+      "ai_median": 1.0,
+      "delta": 0.192,
+      "auc": 0.596,
+      "per_domain_delta": {
+        "baike": -0.26,
+        "open_qa": 0.74,
+        "finance": 0.0,
+        "law": 0.84,
+        "nlpcc_dbqa": 0.0
+      }
+    }
+  }
+}

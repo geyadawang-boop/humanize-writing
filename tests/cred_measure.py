@@ -53,6 +53,10 @@ def stat_line(tag, scores):
 
 def section_cred():
     print("A. C-ReD 历史冻结语料回归（探索性来源对照，不鉴定作者）")
+    if not any(D_CRED.glob("human_*.md")):
+        print("   样本未随仓库分发（上游未声明许可证）；重建："
+              "python -B tests/build_cred_corpus.py --repo <C-ReD 目录>")
+        return
     pooled_ai, pooled_hu = [], []
     for dom, gate in CRED.items():
         hg = measure.collect(sorted(D_CRED.glob("human_cred%s_*.md" % dom)), gate, lint.evaluate)

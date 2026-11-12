@@ -1,0 +1,267 @@
+{
+  "version": 1,
+  "updated": "2026-11-12",
+  "note": "真实任务路由用例。expect_first 是理想的首读文档；expect_final 是走完分册后应落到的文档。accept_first 是同样可接受的首读，avoid 是出现即视为误路由的文档。",
+  "cases": [
+    {
+      "id": "R01",
+      "family": "编辑",
+      "task": "帮我把这篇公众号稿子改得像人写的。观点、例子和那组销售数据都别动，也别给我加什么“首先其次最后”。",
+      "expect_first": "references/editing-workflow.md",
+      "expect_final": ["references/editing-workflow.md"],
+      "accept_first": [],
+      "avoid": ["references/project-workflow.md", "references/detection-principles.md"],
+      "why": "已有文本的通用改稿先走编辑流程；没有检测报告，不应转去解释分数。"
+    },
+    {
+      "id": "R02",
+      "family": "评阅",
+      "task": "先别改，告诉我这篇文章哪里读着像 AI，标出段落和句子就行，我要自己动手。",
+      "expect_first": "references/editing-workflow.md",
+      "expect_final": ["references/editing-workflow.md"],
+      "accept_first": [],
+      "avoid": ["references/deai-techniques.md", "references/project-workflow.md"],
+      "why": "只查不改走编辑流程的评阅分支；直接加载去 AI 技法会把评阅变成代改。"
+    },
+    {
+      "id": "R03",
+      "family": "标题",
+      "task": "悬疑小说写完了，差个书名。要 8 个，别太网文，也别装深沉。",
+      "expect_first": "references/title-craft.md",
+      "expect_final": ["references/title-craft.md"],
+      "accept_first": [],
+      "avoid": ["references/novel-workflow.md", "references/project-workflow.md"],
+      "why": "只改标题是局部交付，不应带出整书初始化或项目台账。"
+    },
+    {
+      "id": "R04",
+      "family": "短篇创作",
+      "task": "写个 3000 字左右的短篇：县城女孩高考完第一天到省城，住进表姐租的房子。要完整故事，不要大纲。",
+      "expect_first": "references/by-genre.md",
+      "expect_final": ["references/by-genre.md", "references/structure-craft.md"],
+      "accept_first": ["references/structure-craft.md"],
+      "avoid": ["references/novel-workflow.md", "references/project-workflow.md"],
+      "why": "单次短篇按文体入口加结构工艺即可；定长短篇不需要整套长篇项目层。"
+    },
+    {
+      "id": "R05",
+      "family": "长篇连载",
+      "task": "我这本书写到 87 章了，今天更 88。先看项目状态和上一章，别改前面的设定，也别重新问我世界观。",
+      "expect_first": "references/novel-workflow.md",
+      "expect_final": ["references/novel-workflow.md", "references/project-workflow.md"],
+      "accept_first": ["references/project-workflow.md"],
+      "avoid": ["references/by-genre.md", "references/title-craft.md"],
+      "why": "已有连载续写先恢复项目状态再写当前章；不能按新短篇处理。"
+    },
+    {
+      "id": "R06",
+      "family": "网文开篇",
+      "task": "新书前三章数据很差，编辑说开篇没留住人。我想大改前三章，但主线不能动。",
+      "expect_first": "references/novel-craft.md",
+      "expect_final": ["references/webnovel-platform-craft.md", "references/novel-architecture.md"],
+      "accept_first": ["references/webnovel-platform-craft.md", "references/novel-architecture.md"],
+      "avoid": ["references/description-craft.md", "references/title-craft.md"],
+      "why": "开篇留存属于网文平台工艺与长篇架构，先经分册索引再选读。"
+    },
+    {
+      "id": "R07",
+      "family": "感情线",
+      "task": "男女主感情线写得像完成任务，读者说不嗑。想加几个关键场景，但不想写成工业糖精。",
+      "expect_first": "references/novel-craft.md",
+      "expect_final": ["references/romance-line-craft.md"],
+      "accept_first": ["references/romance-line-craft.md"],
+      "avoid": ["references/description-craft.md", "references/argumentative-craft.md"],
+      "why": "感情线是小说工艺分册，不应派到描写或议论文。"
+    },
+    {
+      "id": "R08",
+      "family": "命名",
+      "task": "配角名字太土了，想起一批有记忆点、又不中二的现代都市名字。",
+      "expect_first": "references/novel-craft.md",
+      "expect_final": ["references/character-naming-craft.md"],
+      "accept_first": ["references/character-naming-craft.md"],
+      "avoid": ["references/title-craft.md", "references/description-craft.md"],
+      "why": "人物命名在小说分册；标题工艺只处理书名与篇名。"
+    },
+    {
+      "id": "R09",
+      "family": "转场",
+      "task": "两个场景之间切得很硬，读者说像跳帧。一个是雨夜巷口，一个是第二天办公室。",
+      "expect_first": "references/novel-craft.md",
+      "expect_final": ["references/scene-transition-craft.md"],
+      "accept_first": ["references/scene-transition-craft.md"],
+      "avoid": ["references/description-environment.md", "references/screenplay-workflow.md"],
+      "why": "场景转场是小说叙事的独立问题；环境分册解决的是描写取舍，不是场景衔接。"
+    },
+    {
+      "id": "R10",
+      "family": "中期管理",
+      "task": "写到 40 万字，中段开始水，三条支线收不回来，主角目标也模糊了。",
+      "expect_first": "references/longform-revision.md",
+      "expect_final": ["references/mid-story-management.md"],
+      "accept_first": ["references/mid-story-management.md"],
+      "avoid": ["references/description-craft.md", "references/title-craft.md"],
+      "why": "中段停滞与支线失焦先走长篇修订，再进入中期管理分册。"
+    },
+    {
+      "id": "R11",
+      "family": "无限流",
+      "task": "无限流写到第三个副本，规则越加越多，读者说看不懂。怎么把规则收紧？",
+      "expect_first": "references/novel-craft.md",
+      "expect_final": ["references/infinite-flow-craft.md"],
+      "accept_first": ["references/infinite-flow-craft.md"],
+      "avoid": ["references/power-craft.md", "references/argumentative-craft.md"],
+      "why": "无限流的副本规则有独立分册；战力页不负责规则呈现与信息分配。"
+    },
+    {
+      "id": "R12",
+      "family": "环境描写",
+      "task": "环境描写堆得太多，读者跳读。删了又怕没氛围，怎么判断哪些该留？",
+      "expect_first": "references/description-craft.md",
+      "expect_final": ["references/description-environment.md"],
+      "accept_first": ["references/description-environment.md"],
+      "avoid": ["references/poetry-craft.md", "references/exemplar-close-reading.md"],
+      "why": "先按描写功能进入分册索引，再落到环境描写分册；不是句子级范文仿写。"
+    },
+    {
+      "id": "R13",
+      "family": "描写技法",
+      "task": "总被说 tell 太多、show 不出来。给我具体改法，别只讲概念。",
+      "expect_first": "references/description-craft.md",
+      "expect_final": ["references/description-show-tell.md"],
+      "accept_first": ["references/description-show-tell.md"],
+      "avoid": ["references/argumentative-craft.md", "references/academic-craft.md"],
+      "why": "Show / Tell 是描写分册，先经描写索引；不应派到论证或学术工艺。"
+    },
+    {
+      "id": "R14",
+      "family": "物象",
+      "task": "我想用一块旧手表贯穿全文，但每次出现都像硬塞。怎么让它有分量？",
+      "expect_first": "references/description-craft.md",
+      "expect_final": ["references/description-objects.md"],
+      "accept_first": ["references/description-objects.md"],
+      "avoid": ["references/description-environment.md", "references/power-craft.md"],
+      "why": "物象复现与八类对象在描写分册；环境分册不处理道具的重复功能。"
+    },
+    {
+      "id": "R15",
+      "family": "范文精读",
+      "task": "精读《金锁记》开头，学她怎么用句子写人。要能拆到句子动作的那种。",
+      "expect_first": "references/exemplar-close-reading.md",
+      "expect_final": ["references/exemplar-close-reading.md"],
+      "accept_first": ["references/description-close-reading.md"],
+      "avoid": ["references/novel-workflow.md", "references/project-workflow.md"],
+      "why": "句子级范文拆解走范文精读库；章节级六维拆解可作备选，但不是首读。"
+    },
+    {
+      "id": "R16",
+      "family": "句法",
+      "task": "这段话读着像翻译：主语都是“这一现象”“其意义”，被动句一堆。帮我顺成人话。",
+      "expect_first": "references/han-prose-grammar.md",
+      "expect_final": ["references/han-prose-grammar.md", "references/sentence-discipline.md"],
+      "accept_first": ["references/sentence-discipline.md"],
+      "avoid": ["references/description-craft.md", "references/deai-techniques.md"],
+      "why": "翻译腔与抽象主语属于汉语句法层，不是词表替换或描写技法。"
+    },
+    {
+      "id": "R17",
+      "family": "议论文",
+      "task": "我的驳论文立论没问题，但反驳部分很虚，像自己造了个靶子打。",
+      "expect_first": "references/argumentative-craft.md",
+      "expect_final": ["references/argumentative-craft.md"],
+      "accept_first": ["references/argument-and-rhythm.md"],
+      "avoid": ["references/academic-craft.md", "references/description-craft.md"],
+      "why": "让步与反驳属于议论文工艺；学术工艺处理期刊论文的强度与证据，不替代争点判断。"
+    },
+    {
+      "id": "R18",
+      "family": "学术论文",
+      "task": "论文摘要被导师说像模板，满篇“本文旨在”“具有重要意义”。怎么改得像真在研究问题？",
+      "expect_first": "references/academic-craft.md",
+      "expect_final": ["references/academic-craft.md"],
+      "accept_first": [],
+      "avoid": ["references/thesis-craft.md", "references/deai-techniques.md"],
+      "why": "期刊论文摘要走学术工艺；学位论文工艺针对本校稿约与跨章闭合，不处理期刊摘要模型。"
+    },
+    {
+      "id": "R19",
+      "family": "学位论文",
+      "task": "硕士论文第三章和第五章术语不一致，参考文献和正文引用也对不上，怎么系统查？",
+      "expect_first": "references/thesis-craft.md",
+      "expect_final": ["references/thesis-craft.md"],
+      "accept_first": [],
+      "avoid": ["references/academic-craft.md", "references/longform-revision.md"],
+      "why": "跨章术语与引用闭合是学位论文工艺；长篇修订面向小说结构，不负责引用核验。"
+    },
+    {
+      "id": "R20",
+      "family": "演讲",
+      "task": "毕业典礼致辞写得太书面，念出来不像人话，台下还有家长。",
+      "expect_first": "references/speech-craft.md",
+      "expect_final": ["references/speech-craft.md"],
+      "accept_first": [],
+      "avoid": ["references/poetry-craft.md", "references/academic-craft.md"],
+      "why": "口播语域与听读句法归演讲工艺；不能按书面文章或诗歌处理。"
+    },
+    {
+      "id": "R21",
+      "family": "商务公文",
+      "task": "给合作方写封邮件催进度，要客气但不卑微，也别写“如有不便敬请谅解”这种。",
+      "expect_first": "references/genre-router.md",
+      "expect_final": ["references/by-genre.md", "references/editing-workflow.md"],
+      "accept_first": ["references/by-genre.md", "references/editing-workflow.md"],
+      "avoid": ["references/speech-craft.md", "references/academic-craft.md"],
+      "why": "商务邮件先做文体适配，再按编辑流程控制礼貌与责任表达。"
+    },
+    {
+      "id": "R22",
+      "family": "诗歌",
+      "task": "这首现代诗分行很怪，读起来断气。帮我看看哪里该断、哪里不该断。",
+      "expect_first": "references/poetry-craft.md",
+      "expect_final": ["references/poetry-craft.md"],
+      "accept_first": [],
+      "avoid": ["references/description-craft.md", "references/by-genre.md"],
+      "why": "跨行与分行是诗歌工艺的专属问题；by-genre 不负责现代诗分行。"
+    },
+    {
+      "id": "R23",
+      "family": "剧本",
+      "task": "平台要求短剧第一集前 30 秒必须有钩子。我这个开场是女主醒来照镜子，怎么改？",
+      "expect_first": "references/screenplay-workflow.md",
+      "expect_final": ["references/screenplay-workflow.md", "references/chinese-screenplay-format.md"],
+      "accept_first": ["references/chinese-screenplay-format.md"],
+      "avoid": ["references/novel-workflow.md", "references/description-craft.md"],
+      "why": "竖屏短剧按剧本工作流的短剧分支处理，再核对中文格式与场景成本。"
+    },
+    {
+      "id": "R24",
+      "family": "伏笔",
+      "task": "全书改到一半，发现前面埋的一个线索后面忘了收。读者已经在评论区问了。",
+      "expect_first": "references/longform-revision.md",
+      "expect_final": ["references/foreshadowing-craft.md"],
+      "accept_first": ["references/foreshadowing-craft.md"],
+      "avoid": ["references/power-craft.md", "references/title-craft.md"],
+      "why": "长篇修订建立影响范围，伏笔工艺负责埋设、唤醒与回收的对应关系。"
+    },
+    {
+      "id": "R25",
+      "family": "检测复核",
+      "task": "某平台检测说我 AI 率 87%，可这稿是我自己写的。报告我截图了，你帮我看看该怎么理解。",
+      "expect_first": "references/detection-principles.md",
+      "expect_final": ["references/detection-principles.md"],
+      "accept_first": [],
+      "avoid": ["references/deai-techniques.md", "references/editing-workflow.md"],
+      "why": "用户要解释报告，不是改稿；先核评分口径与报告条件，不能直接进入降分修改。"
+    },
+    {
+      "id": "R26",
+      "family": "项目管理",
+      "task": "长篇写到第二卷，跨会话老忘设定：谁断了手、密信在谁身上、过了几天。想建个状态文件。",
+      "expect_first": "references/project-workflow.md",
+      "expect_final": ["references/project-workflow.md", "references/novel-workflow.md"],
+      "accept_first": ["references/novel-workflow.md"],
+      "avoid": ["references/timeline-craft.md", "references/title-craft.md"],
+      "why": "跨会话状态与台账先走项目执行；时间线工艺只核对单点矛盾，不负责建状态文件。"
+    }
+  ]
+}

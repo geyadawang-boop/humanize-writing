@@ -1,13 +1,16 @@
+import argparse
 import csv
 import hashlib
+import os
 import re
 import statistics
+import sys
 from pathlib import Path
 
 csv.field_size_limit(10_000_000)
 
-REPO = Path(r"C:\Users\shiniyaya\AppData\Local\Temp\C-ReD_repo")
-SRC = REPO / "benchmark data"
+# 上游数据目录由 --repo 或 CRED_REPO 指定；样本不随仓库分发。
+SRC = None
 OUT = Path(__file__).parent / "corpus_cred"
 
 DOMAINS = {
@@ -61,13 +64,22 @@ def read_rows(path: Path):
             yield row
 
 
-def main():
+def main(src=None):
+    src = Path(src) if src is not None else SRC
+    if src is None or not src.is_dir():
+        print(
+            "找不到 C-ReD 源数据目录：%s\n"
+            "先克隆 https://github.com/HeraldofLight/C-ReD，再用 --repo 指向仓库根目录"
+            "（应包含 benchmark data/），或设置环境变量 CRED_REPO。" % src,
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
     OUT.mkdir(exist_ok=True)
     manifest = []
     stats = {}
 
     for domain, gate in DOMAINS.items():
-        dpath = SRC / domain
+        dpath = src / domain
         fname = domain.replace(" ", "_")
         human_path = dpath / f"CReD_{fname}_human.csv"
         humans = []
@@ -148,4 +160,13 @@ def write_sample(name: str, text: str):
 
 
 if __name__ == "__main__":
-    main()
+    ap = argparse.ArgumentParser(description="从 C-ReD 上游 CSV 重建 tests/corpus_cred/（确定性抽样）")
+    ap.add_argument("--repo", help="C-ReD 仓库根目录（应包含 benchmark data/）；也可设置 CRED_REPO")
+    args = ap.parse_args()
+    repo = args.repo or os.environ.get("CRED_REPO")
+    if not repo:
+        ap.error(
+            "未指定数据目录：请先克隆 https://github.com/HeraldofLight/C-ReD，"
+            "然后运行 --repo <目录> 或设置 CRED_REPO"
+        )
+    main(Path(repo) / "benchmark data")

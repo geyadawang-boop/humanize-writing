@@ -4,7 +4,7 @@
 
 | 项目 | 说明 |
 |---|---|
-| 当前版本 | v0.59.3（程序与 lint 规则集 0.46） |
+| 当前版本 | v0.60.0（程序与 lint 规则集 0.46） |
 | 文档语言 | 简体中文 |
 | 运行依赖 | Python 3.8+，仅标准库，无需安装第三方包 |
 | 许可证 | [Apache-2.0](LICENSE) |
@@ -30,7 +30,7 @@
 - **创作**：短篇、散文、诗歌、文章、长篇小说、网文、电影/剧集/短剧/话剧/广播剧，从立项到整部修订。
 - **编辑**：改稿、去模板感、文风提升、只查不改的评阅、标题拟定。
 - **管理**：长篇项目的状态、大纲、正文清单、连续性台账、跨会话交接与完结验收。
-- **检查**：静态写作线索扫描、台账完整性与红线审计、改前改后对比报告。
+- **检查**：静态写作线索扫描、台账完整性与红线审计、改前改后对比报告、训练分布内的“AI 参与度”参考分。
 
 **它不做什么**：不承诺降低 AI 检测率，不鉴定作者身份，不把小伎俩当成“人味”。去模板感只是编辑需求中的一种；把所有作品改到低分不是本项目的目标。
 
@@ -47,7 +47,7 @@ Claude Code（macOS/Linux）: ~/.claude/skills/humanize-writing
 
 Trae 或其他支持 `SKILL.md` 的环境放入各自的 skills 目录即可。技能以自身根目录定位脚本，不依赖当前工作目录。
 
-也可以用 npm 做内容分发（不提供 CLI）：`npm pack` 生成 `humanize-writing-0.59.3.tgz`，解包后把其中的 `humanize-writing/` 复制到上面的技能目录。
+也可以用 npm 做内容分发（不提供 CLI）：`npm pack` 生成 `humanize-writing-0.60.0.tgz`，解包后把其中的 `humanize-writing/` 复制到上面的技能目录。
 
 **2. 验证安装**
 
@@ -83,7 +83,7 @@ python -B scripts/writing_project.py checkpoint ./我的小说 --next "核读第
 
 每次任务先分清四个维度：**操作**（新写/续写/改稿/评阅/改编）→ **作品**（文体与媒介）→ **阶段**（立项/推进/修订/完结）→ **症状**（当前具体问题）。入口只有一条：[统一路由](references/routing.md)。旧 A–I 模式仅作兼容别名。
 
-按需加载，单次优先解决一两个主要问题，不把 78 份文档与规则台账塞进一次创作。这是本技能与“大而全提示词”的根本区别：**知识量不等于上下文里的字数量**。
+按需加载，单次优先解决一两个主要问题，不把 84 篇文档与规则台账塞进一次创作。这是本技能与“大而全提示词”的根本区别：**知识量不等于上下文里的字数量**。
 
 ### 2. 知识、记录、程序三层分离
 
@@ -108,6 +108,7 @@ python -B scripts/writing_project.py checkpoint ./我的小说 --next "核读第
 ### 5. 检查不等于质量保证
 
 - `ai_smell_lint.py` 输出的是**静态命中强度**（0–100 的加权计数），JSON 中明确标记 `is_ai_probability=false`，25/40 只是提示阈值。
+- `ai_rate.py` 输出的是**训练分布内的参考值**（0–1 + 分数带 + 分窗 IQR），JSON 中标记 `is_authorship_judgment=false`；同域测试 AUC 0.924，但跨语料 C-ReD 只有 0.590，公版散文有真实误报。它不是 AI 生成概率，也不预测任何外部产品分数。
 - `ledger_check.py` 只检查伏笔、战力、改纲、疑问、情绪窗口与完结处置的记录是否自洽；红灯黄灯都不等于“作品好/坏”。
 - 缺失文件、错表头、空表、占位符会被记为“检查未完成”，**不允许假绿**。
 
@@ -122,6 +123,7 @@ python -B scripts/writing_project.py checkpoint ./我的小说 --next "核读第
 | 改稿、去模板感、文风提升 | 修订稿 + 保留项说明 | [编辑流程](references/editing-workflow.md) |
 | 只查不改、评阅已有稿 | 带位置、影响与优先级的评阅 | [编辑流程](references/editing-workflow.md) |
 | 解释 AI 检测报告 / 核验评分变化 | 口径核查与证据边界说明 | [检测证据与资料要求](references/detection-principles.md) |
+| 要一个本地“AI 参与度”参考值 | 0–1 参考值 + 分数带 + 分窗 IQR + 前 8 项特征贡献 | [校准报告](references/calibration-report.md) |
 | 起标题、改标题 | 按数量要求给候选 | [标题工艺](references/title-craft.md) |
 | 新写短篇、散文、诗歌、文章 | 正文成稿 | [统一路由](references/routing.md) |
 | 句子别扭、重心不清、修饰语堆叠、收尾发虚 | 句层诊断与逐类修订 | [汉语行文决断](references/han-prose-grammar.md) |
@@ -146,7 +148,8 @@ humanize-writing/
 ├── CHANGELOG.md             # 版本变更记录
 ├── package.json             # npm 包元数据（内容分发，不暴露 CLI）
 ├── LICENSE                  # Apache-2.0
-├── references/              # 78 份按需读取的工艺、流程与证据文档 + 规则台账
+├── NOTICE                   # 第三方语料署名与许可（HC3-Chinese: CC BY-SA 4.0）
+├── references/              # 84 篇按需读取的工艺、流程与证据文档 + 4 份证据/台账 JSON
 │   ├── README.md            # 分类索引（建议从这里进入）
 │   ├── routing.md           # 唯一任务分派入口
 │   ├── editing-workflow.md  # 改稿 / 评阅 / 停止条件
@@ -155,17 +158,23 @@ humanize-writing/
 │   ├── project-workflow.md  # 项目状态、工具与检查证据
 │   └── ...
 ├── templates/               # 13 份项目模板（见 templates/README.md）
-├── scripts/                 # 4 个仅用标准库的脚本
+├── corpora/                 # 5203 对 HC3-Chinese 同题语料 + manifest（CC BY-SA 4.0）
+├── models/                  # 31 特征逻辑回归 + Platt 校准模型（12 KB JSON）
+├── scripts/                 # 8 个仅用标准库的脚本
 │   ├── writing_project.py   # 11 个子命令的项目记录器
 │   ├── ledger_check.py      # 6 组台账检查
 │   ├── ai_smell_lint.py     # 静态写作线索扫描
-│   └── compare_report.py    # 改前改后对比报告
-└── tests/                   # 17 组、251 项单元测试 + selftest + 6 套冻结语料
+│   ├── compare_report.py    # 改前改后对比报告
+│   ├── features.py          # 31 个可解释写作特征
+│   ├── ai_rate.py           # 校准参考分：train / eval / predict / explain
+│   ├── corpus_build.py      # 语料下载、清洗、切分与 manifest 校验
+│   └── evidence_measure.py  # 在冻结语料上测量规则与特征的区分力
+└── tests/                   # 22 组、293 项单元测试 + 真实任务评测集 + selftest + 冻结语料
 ```
 
 ## 命令行工具
 
-四个脚本都只用 Python 标准库，不要求安装 hook 或 CI，也不会在后台自动执行。
+八个脚本都只用 Python 标准库，不要求安装 hook 或 CI，也不会在后台自动执行。前四个面向稿件与项目，后四个面向模型、语料与证据复现。
 
 ### writing_project.py：项目记录器
 
@@ -262,6 +271,35 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --seman
 
 同一规则集评改前改后两稿，输出指标对比表、分级命中清单（标注改后是否仍命中）、逐段标红对照，可合并人工判读 JSON。它展示“改了什么、哪些指标变了”，不证明改得更好。
 
+### ai_rate.py：校准参考分
+
+```bash
+python -B scripts/ai_rate.py predict 稿子.md
+python -B scripts/ai_rate.py predict 稿子.md --json --genre fiction
+python -B scripts/ai_rate.py eval --model models/zh_hc3_logreg_v1.json
+python -B scripts/ai_rate.py explain
+```
+
+用 31 个可解释特征（句长分布、型例比、套话密度、段首重复等）做逻辑回归，再用 Platt 校准映射到 0–1。输出分数带（偏低 / 不确定 / 偏高）、分窗 IQR、前 8 项特征贡献与分布外警告；汉字不足 100 个时拒绝评分。
+
+**只在训练分布内解读**：训练语料是中文问答/百科体（HC3-Chinese 5203 对）。同域测试 AUC 0.9243（95% CI 0.9124–0.9376）、EER 0.1613、Brier 0.1088；跨语料 C-ReD 只有 0.590；鲁迅《影的告别》误报 0.94。因此：
+
+- 不回答“这段是不是 AI 写的”，不判定作者；
+- 不预测知网、Turnitin、GPTZero、朱雀等外部产品的分数；
+- 对长篇、诗歌、剧本、公文不承诺可信概率，JSON 会带 `warnings`；
+- 不能拿它给改稿“刷分”，也不能把分数下降当文风改善。
+
+指标、校准表、失败边界与禁用场景见 [校准报告](references/calibration-report.md)；特征清单与证据编号见 `ai_rate.py explain`。
+
+### corpus_build.py 与 evidence_measure.py：复现
+
+```bash
+python -B scripts/corpus_build.py --download
+python -B scripts/evidence_measure.py
+```
+
+`corpus_build.py` 下载 HC3-Chinese、清洗成同题配对、按 `sha256(id)` 切成 train/cal/test 并写 manifest 校验和；`evidence_measure.py` 在冻结语料上测量 31 个特征的 δ=2·AUC−1 与 41 条规则的命中率差，输出 [feature-evidence.json](references/feature-evidence.json) 与 [rule-measurements.json](references/rule-measurements.json)。`--update-ledger` 只登记实测值，不改权重、不升规则集版本。语料来源、许可与未随包数据集见 [语料清单](references/corpus-manifest.md)。
+
 ### 退出码约定
 
 | 工具 | 0 | 1 | 2 |
@@ -270,6 +308,7 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --seman
 | `ledger_check.py` | 检查完整且无红线（仍可能有黄线） | 存在红线 | 输入不完整或调用错误（优先于红线） |
 | `ai_smell_lint.py` | 未超静态阈值 | 超过静态阈值，需按文体核读 | 输入不足、语言未确认或参数错误 |
 | `compare_report.py` | 报告已生成 | — | 输入或判读 JSON 无法读取 |
+| `ai_rate.py` | 已评分 / 已训练 / 已打印（含 `insufficient` 与分布外警告） | — | 输入无法解码或参数错误 |
 
 退出码 0 只说明**该工具在该口径下通过了**，不构成作品质量结论。
 
@@ -279,10 +318,12 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --seman
 
 | 项目 | 现状 |
 |---|---|
-| 自动化测试 | 251 项 unittest 全部通过；`selftest.py` RC=0 |
-| 结构审计 | 589 个文件全部 UTF-8 / LF；本地链接可达；78 篇 references 均有加载入口 |
-| 规则台账 | 41 条（加权 16 / 观察 15 / 状态 10），探针逐条驱动 |
-| 冻结语料 | 6 套（含 HC3 与 CReD 配对集），方向测试锁定权重 |
+| 自动化测试 | 293 项 unittest 全部通过；`selftest.py` RC=0 |
+| 语义评测 | `tests/eval/`：26 条路由用例、7 组改稿盲评、3 条长篇续写漂移；需另起模型会话按协议运行 |
+| 结构审计 | 全部文件 UTF-8 / LF；本地链接可达；84 篇 references 均有加载入口 |
+| 规则台账 | 41 条（加权 16 / 观察 15 / 状态 10），探针逐条驱动；10 条附 HC3 实测登记 |
+| 参考分模型 | 31 特征逻辑回归；3667 / 823 / 713 对切分；test AUC 0.9243（CI 0.9124–0.9376）、EER 0.1613、Brier 0.1088 |
+| 冻结语料 | 7 套（含 6 套配对集与随包 HC3 5203 对），方向测试锁定权重 |
 | 端到端 | `init` → 写章 → `lint` → 改写 → `compare_report` → `checkpoint` → `check` |
 | 三副本 | Desktop / `.trae-cn` / `.claude` 逐文件 SHA256 一致 |
 
@@ -294,6 +335,7 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --seman
 - v0.39–v0.40：追加文学选段实改、连载局部只读评阅与新写短请求试用，保留首轮缺陷与修正记录。
 - v0.41–v0.58：主要调整文档、lint 计分口径与输入解码；规则集与分数未变，跨版本分数变化不能当作文风改善。
 - v0.59：规则集 0.45 → 0.46。词表类信号改频率门、结尾类改门槛制、句式改千字密度，并按文体豁免常规用词；同一文本的分数会低于 0.45，两个版本不可直接比较。
+- v0.60：采纳外部资料包中的特征层与校准模型，新增 5203 对语料、31 特征模型、4 个脚本与 8 篇证据文档；lint 规则集仍 0.46，权重未改，台账只增实测登记。跨语料与公版文本的失败边界同时写入文档。
 
 各版本改动与验证证据见 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -307,12 +349,13 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --seman
 | 保存跨会话状态、最近正文、下一步与未决事项 | 模型凭记忆绝不丢线 |
 | 检查正文覆盖、记录新鲜度、承诺处置与评阅证据 | 脚本能判断伏笔自然、战力合理或商业成功 |
 | 回归测试、微型作品闭环、独立操作评阅 | 已完成几十万字真实长篇试验或外部检测验证 |
+| 同域语料上的参考分与校准表 | AI 生成概率、作者身份结论、外部平台分数预测 |
 
 完整作品需要实际生成全部约定正文、逐章（集）修订与终局回读。工具登记的 assisted 评阅是模型辅助评阅，不能写成真实读者背书。
 
 ## 文档索引
 
-- [references/README.md](references/README.md)：78 份文档与规则台账的分类索引（路由 / 流程 / 小说工艺 / 文体 / 边界与检测 / 研究档案）。
+- [references/README.md](references/README.md)：84 篇文档与 4 份证据/台账 JSON 的分类索引（路由 / 流程 / 小说工艺 / 文体 / 边界与检测 / 研究档案）。
 - [templates/README.md](templates/README.md)：模板分工、每章更新、整书核读与台账检查语义。
 - [SKILL.md](SKILL.md)：智能体执行入口，含任务分派表与共同边界。
 
@@ -326,4 +369,6 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --seman
 
 ## 许可证
 
-[Apache License 2.0](LICENSE)。
+技能代码与文档：[Apache License 2.0](LICENSE)。
+
+随包语料 `corpora/pairs/` 来自 HC3-Chinese，按 **CC BY-SA 4.0** 分发，署名、修改声明与同许可要求见 [NOTICE](NOTICE)；`tests/corpus_cred/` 的上游未声明许可证，因此样本不进入 git 与 npm 包，只保留来源登记，需要时按 `tests/corpus_cred/SOURCES.md` 在本机重建。`models/` 为在本项目冻结语料上训练的权重，不含语料原文。

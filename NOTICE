@@ -1,5 +1,51 @@
 humanize-writing
 Copyright 2026 geyadawang-boop
 
-本产品包含由 humanize-writing 项目原创的文档、模板与脚本。
+本产品包含由 humanize-writing 项目原创的文档、模板、脚本与模型。
 部分创作工艺与研究资料在 references/ 中标注了来源，引用前请按各文档的来源说明复核。
+
+=== 第三方语料与许可 ===
+
+1. HC3-Chinese（随包语料 corpora/pairs/ 与 tests/corpus_hc3/ 的来源）
+
+   名称：HC3-Chinese (Human ChatGPT Comparison Corpus, Chinese)
+   发布方：Hello-SimpleAI
+   地址：https://huggingface.co/datasets/Hello-SimpleAI/HC3-Chinese
+   论文：https://arxiv.org/abs/2301.07597
+   许可：Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+   许可全文：https://creativecommons.org/licenses/by-sa/4.0/
+
+   本项目对原数据做了以下修改，并按 CC BY-SA 4.0 以相同许可分享这部分内容：
+   - 仅保留中文子集中含人类回答与 ChatGPT 回答的配对；
+   - 每侧截断至约 1200 汉字，剔除 URL、邮箱、电话与含高风险词的样本；
+   - 排除 psychology、medicine 两个主题域，按 sha256(id) 重新切分为
+     train / cal / test，不保存上游 prompt 原文；
+   - 具体条数、过滤规则与校验和见 corpora/manifest.json 与
+     references/corpus-manifest.md。
+
+2. 公版文本（tests/corpus/、tests/corpus_classic/）
+
+   鲁迅、朱自清、闻一多等作者的作品，作者逝世已超过中国著作权法规定的保护期，
+   正文进入公有领域。逐篇来源 URL 见各目录下的 SOURCES.md。
+   其中 tests/corpus_classic/ 的正文经二手资料转引并做繁转简，可能存在异文，
+   引用校对请回到权威版本。
+
+3. 官方公开文书（tests/corpus/law_gongbao_*.md）
+
+   最高人民法院公报官网公开的裁判文书，逐篇 URL 见 tests/corpus/SOURCES.md。
+
+4. C-ReD（tests/corpus_cred/）
+
+   上游仓库 https://github.com/HeraldofLight/C-ReD 未声明许可证（根目录无 LICENSE）。
+   该目录仅作为本地研究对照使用；样本（human_*.md / ai_*.md）不进入 git 仓库
+   与 npm 包，只保留 SOURCES.md 与 MANIFEST.md 作为来源登记。
+   需要时运行 tests/build_cred_corpus.py --repo <C-ReD 仓库目录> 在本机重建。
+
+5. 项目内生成样本（tests/corpus_ai/、tests/corpus_ai_calib/、tests/samples/）
+
+   由本项目或相互独立的生成会话撰写，用于回归与校准，不含第三方版权内容。
+
+=== 研究资料 ===
+
+references/detection-evidence.md 中引用的论文与网页仅作摘要与出处标注，
+不复制原文；引用前请按该文档的编号回到原始来源核对。

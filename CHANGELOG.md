@@ -4,6 +4,37 @@
 
 版本号只表示本的维护批次，不代表能力等级；跨版本的分数变化不能直接当作文风改善或能力提升。
 
+## 0.60.0：采纳特征层与校准模型（资料包 v0.60）
+
+资料包提供了 31 个可解释特征、一个在同题语料上训练并校准的逻辑回归、5203 对 HC3-Chinese 语料与 8 篇证据文档。本轮只做加法式采纳：保留本仓库拆分后的文档结构、路由与评测集，逐项核对后适配，不整包覆盖。
+
+- 新增 `scripts/features.py`：31 个可解释汉语写作特征（句长分布、型例比、套话密度、段首重复等），每项绑定 `references/detection-evidence.md` 的来源编号与本项目实测值。
+- 新增 `scripts/ai_rate.py`：L2 逻辑回归 + Platt 校准，输出 0–1 参考值、分数带、分窗 IQR、前 8 项特征贡献与分布外警告；`is_authorship_judgment=false`，汉字不足 100 时拒绝评分。
+- 新增 `scripts/corpus_build.py` 与 `scripts/evidence_measure.py`：前者重建语料并写校验和，后者测量 31 特征的 δ=2·AUC−1 与 41 条规则的命中率差。
+- 新增 `models/zh_hc3_logreg_v1.json` 与 `corpora/pairs/`（3667/823/713 对）。HC3-Chinese 按 CC BY-SA 4.0 分发，`NOTICE` 补署名、修改声明与同许可条款；npm `files` 排除 `tests/corpus_cred/`。
+- 新增 5 篇文档（检测证据库、校准报告、语料清单、写作资料库、同类资源对照）与 3 份机器可读证据（`evidence-index.json`、`feature-evidence.json`、`rule-measurements.json`）。
+- 新增 4 组测试（features / ai_rate / corpus_manifest / evidence_index），测试总数 255 → 293。
+- **调整而非照搬**：
+  1. `evidence_measure.py --update-ledger` 不再把 `ruleset_version` 改成 0.47。本轮没有改任何权重与阈值，台账保持 0.46，只给 10 条达到测量门槛的规则登记 HC3 实测值；未达门槛的旧值一并删除，避免台账混用两代口径。
+  2. `corpus_build.py` 的临时目录改用 `tempfile.gettempdir()`，不再在 Windows 盘根创建 `/tmp`。
+  3. `ai_rate.py` 在分窗评分时显式提示：分数取窗口中位数，特征贡献按整篇向量计算，两者口径不同，贡献只用于定位。
+  4. 不覆盖 `novel-craft.md`、`description-craft.md`、`longform-revision.md`、`routing.md` 与本仓库的 `test_skill_structure.py`；资料包中这些文件是拆分前版本，直接覆盖会丢掉分册链接与结构守卫。
+- **边界**：同域测试 AUC 0.9243（CI 0.9124–0.9376）、EER 0.1613、Brier 0.1088；跨语料 C-ReD 只有 0.590，鲁迅《影的告别》误报 0.94。分数不是 AI 生成概率，不判作者，不预测外部分数；长篇、诗歌、剧本、公文不承诺可信概率。
+- **发布边界**：`tests/corpus_cred/` 的 360 个样本（`human_*.md` / `ai_*.md`）不再进入 git 与 npm 包，只保留 `SOURCES.md`、`MANIFEST.md` 作为来源登记；`tests/build_cred_corpus.py` 改为用 `--repo` / `CRED_REPO` 指定上游目录，缺失时给出获取指引并以退出码 2 结束，相关方向测试在样本缺失时自动 skip。`tests/build_hc3_corpus.py` 恢复默认 TLS 证书校验，仅在显式 `--insecure` 时降级，源文件 SHA-256 校验仍强制。
+- 效果：293 项 unittest 与 selftest 通过；lint 规则集、分数、`status` 与退出码未变。
+
+## 0.59.4：建真实任务评测集
+
+单元测试只能证明脚本与链接没坏，不能回答“模型拿到一个真实请求会不会选对文档”。本轮按评审顺序补语义评测的起点，同时修掉评测暴露的一处断链。
+
+- 新增 `tests/eval/`：26 条真实任务路由用例（编辑、评阅、标题、短篇、连载、开篇、感情线、命名、转场、中期、无限流、描写、句法、议论文、学术、学位论文、演讲、商务、诗歌、剧本、伏笔、检测、项目管理），每条给出首读、最终落点、可接受替代与误加载文档。
+- 新增 7 组改稿盲评用例：商务邮件、学术摘要、技术说明、毕业致辞、小说片段、时事评论、公文通知；每组列出必须保住的事实与最容易失真的改法，并附 1–5 分五项评分表。
+- 新增 3 条长篇续写漂移用例：都市悬疑、古代权谋、近未来科幻；只把前提、状态、大纲、已写正文和续写任务给生成模型，检查点与漂移陷阱留给评阅者。
+- 新增 `tests/eval/validate_eval.py` 与 `tests/test_eval_set.py`：校验用例数量、id/任务不重复、目标文档存在、从 `SKILL.md` 不超过 3 跳、从 `routing.md` 不超过 2 跳，并检查分层用例的最终落点确实由首读文档或入口/路由直接链接。
+- 修一处真实断链：`longform-revision.md` 原来没有指向中期剧情管理与伏笔工艺，R10、R24 的最终落点只能绕回 `novel-craft.md`；补条件链接后，从长篇修订页可直达两页，且声明本页不重设方法。
+- 效果：255 项 unittest 通过；lint 规则集、脚本、分数与退出码未变。
+- 说明：用例只是评测集的起点。真正跑语义路由要另起模型会话，按 `tests/eval/README.md` 记录首读、最终落点与加载清单；本轮不做模型自评，也不把 26 条小样本当泛化准确率。
+
 ## 0.59.3：分册后的路由补链
 
 分册拆分后做入口到目标页的链接 BFS，15 条代表性任务全部可达，但路由表本身有两处没有接上：

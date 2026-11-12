@@ -6,3 +6,7 @@ venv/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# C-ReD 上游未声明许可证：只保留来源登记与抽样清单，样本按需本地重建
+tests/corpus_cred/human_*.md
+tests/corpus_cred/ai_*.md

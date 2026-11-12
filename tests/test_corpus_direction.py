@@ -17,6 +17,11 @@ LINT = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(LINT)
 LEDGER = json.loads((ROOT / "references" / "rule-ledger.json").read_text(encoding="utf-8"))
 
+CRED_DIR = ROOT / "tests" / "corpus_cred"
+HAS_CRED = CRED_DIR.is_dir() and any(CRED_DIR.glob("human_*.md"))
+CRED_SKIP = ("tests/corpus_cred 样本不随仓库分发（上游未声明许可证）；"
+             "需要时用 tests/build_cred_corpus.py --repo <C-ReD 目录> 本地重建")
+
 
 def body_of(path):
     return LINT.strip_markdown(path.read_text(encoding="utf-8-sig"))
@@ -36,7 +41,7 @@ def hc3_pairs():
 
 
 def cred_pairs():
-    base = ROOT / "tests" / "corpus_cred"
+    base = CRED_DIR
     humans, ais = {}, {}
     for p in base.glob("human_*.md"):
         m = re.fullmatch(r"human_(.+?)_(\d+)\.md", p.name)
@@ -56,8 +61,10 @@ def mean(values):
 class CorpusDirectionTests(unittest.TestCase):
     def test_pairs_are_actually_present(self):
         self.assertEqual(len(hc3_pairs()), 12, "hc3 同题配对不应为空")
-        self.assertEqual(len(cred_pairs()), 30, "cred 同题配对不应为空")
+        if HAS_CRED:
+            self.assertEqual(len(cred_pairs()), 30, "cred 同题配对不应为空")
 
+    @unittest.skipUnless(HAS_CRED, CRED_SKIP)
     def test_road_words_are_not_denser_in_ai(self):
         pairs = [(count_density(h), count_density(a)) for h, a in cred_pairs()]
         human = mean([sum(d[w] for w in LINT.ROAD_WORDS) for d, _ in pairs])
@@ -67,6 +74,7 @@ class CorpusDirectionTests(unittest.TestCase):
                                 % (human, machine))
         self.assertEqual(next(r for r in LEDGER["rules"] if r["tag"] == "[路标词]")["kind"], "observation")
 
+    @unittest.skipUnless(HAS_CRED, CRED_SKIP)
     def test_strong_words_lean_ai_enough_to_keep_weight(self):
         pairs = [(count_density(h), count_density(a)) for h, a in cred_pairs()]
         human = mean([sum(d[w] for w in LINT.STRONG_WORDS) for d, _ in pairs])
@@ -87,6 +95,7 @@ class CorpusDirectionTests(unittest.TestCase):
                                 "hc3 配对上段首重复应偏 AI，否则应降权")
         self.assertEqual(next(r for r in LEDGER["rules"] if r["tag"] == "[段落开头]")["kind"], "weighted")
 
+    @unittest.skipUnless(HAS_CRED, CRED_SKIP)
     def test_translationese_family_has_no_stable_direction(self):
         """整族在两套语料上方向相反，因此只允许零权重。"""
         def density(path):
@@ -104,6 +113,7 @@ class CorpusDirectionTests(unittest.TestCase):
         self.assertEqual(rule["kind"], "observation")
         self.assertTrue(str(rule["weight"]).startswith("0"))
 
+    @unittest.skipUnless(HAS_CRED, CRED_SKIP)
     def test_isomorphism_leans_ai_but_human_classics_also_trigger(self):
         def density(path):
             runs2, _, total = LINT.isomorphism_runs(body_of(path))
@@ -118,6 +128,7 @@ class CorpusDirectionTests(unittest.TestCase):
         self.assertEqual(rule["kind"], "observation")
         self.assertTrue(str(rule["weight"]).startswith("0"))
 
+    @unittest.skipUnless(HAS_CRED, CRED_SKIP)
     def test_worst_case_direction_is_not_reversed(self):
         """整篇加权分不得出现"人类显著更高"的反向；否则整套权重失去意义。
 

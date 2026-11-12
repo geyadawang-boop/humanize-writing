@@ -9,7 +9,7 @@
 - **数据集**：C-ReD（Chinese Real-vs-AI Detection benchmark），128,610 样本（human 12,997 / AI 115,613），5 域 × 9 生成器。
 - **论文**：ACL 2026 Findings, pp. 42703–42733（arXiv 2604.11796）。
 - **仓库**：`github.com/HeraldofLight/C-ReD`，HEAD commit `b90072cd218b6ebdbd1d1478ce6e439677f18192`（2026-07-06 "Update README.md"）。
-- **取得方式**：`git clone --depth 1 https://github.com/HeraldofLight/C-ReD.git`（2026-09-20 克隆至本机临时目录；raw.githubusercontent.com 与 github.com 直连均可用，api.github.com 当时限流）。
+- **取得方式**：`git clone --depth 1 https://github.com/HeraldofLight/C-ReD.git`（2026-09-20 克隆至本机临时目录；raw.githubusercontent.com 与 github.com 直连均可用，api.github.com 当时限流）。样本不随仓库分发；重建命令见文末。
 - **许可**：**仓库未附 LICENSE 文件**（已核实 `/blob/main/LICENSE` 404）。引用以论文条目为准；语料仅作本地测量用途，不再分发。
 
 ## 抽样协议（确定性，可复现）
@@ -59,4 +59,12 @@
 2. **原序抽样非随机**：确定性优先于随机性（可复现、可审计），样本不代表数据集整体分布，仅代表"窗内靠前样本"。
 3. **体裁不对称**：paper 域 human 样本为真实论文摘要/段落（含 `paper_title` 等元数据已剥离），AI 样本为模型生成的论文式文本，两者写作任务设定并非严格对齐。
 4. **生成器版本时效**：AI 样本反映 2024–2026 年各模型输出风格，不代表其后版本的检测表现。
-5. **无 LICENSE**：见"来源"节，仅本地测量使用。
+5. **无 LICENSE**：见"来源"节，仅本地测量使用；样本不进入 git 仓库与 npm 包。
+
+## 重建
+
+```bash
+python -B tests/build_cred_corpus.py --repo /path/to/C-ReD
+```
+
+也可用环境变量 `CRED_REPO` 指定仓库根目录；脚本会寻找其中的 `benchmark data/`，按本文协议确定性写出 360 个样本，并重写 `MANIFEST.md`。

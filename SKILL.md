@@ -2,7 +2,7 @@
 name: humanize-writing
 description: 创作、续写、修订和润色中文或英文文本：去 AI 味、去 AI 腔、去模板感、拆套话、说人话，改善空洞、重复与过度工整的表达。适用于小说、网文、剧本、诗歌、歌词、旧体诗词、散文、议论文、学术论文与研究生学位论文、演讲稿与发言稿、标题，以及只查不改的文本评阅；长篇任务管理大纲、正文、连续性台账和完结验收。检测分数仅供编辑参考，不鉴定作者身份或保证过检。
 metadata:
-  version: '0.59'
+  version: '0.60'
 ---
 
 # Humanize Writing
@@ -17,6 +17,7 @@ metadata:
 |---|---|---|
 | 改稿 / 去模板感 / 文风提升 | [编辑流程](references/editing-workflow.md) | 保留事实、立场和必要格式，按问题修改 |
 | 解释AI检测报告 / 核验某平台评分变化 | [检测证据与资料要求](references/detection-principles.md) | 先核评分口径和实际前后报告；同时要改善文风时再接编辑流程，不以本地lint冒充外部分数 |
+| 要一个“AI参与度”参考值 / 评估稿子偏离程度 | [校准报告](references/calibration-report.md) | 先看语料分布与失败边界；只报分数带与分窗IQR，不当作者判定，不换算外部分数 |
 | 只查不改 / 评阅已有稿 | [编辑流程](references/editing-workflow.md)的评阅分支 | 报位置、问题、影响与建议，不写回原稿 |
 | 起标题 / 改标题 | [标题工艺](references/title-craft.md) | 按用户要的数量给候选；只改标题不重写正文 |
 | 新写短篇、诗歌、散文或文章 | [统一路由](references/routing.md) | 选对应文体专章；小任务直接写，无须建立项目台账 |
@@ -28,7 +29,7 @@ metadata:
 | 电影 / 电视剧 / 短剧 / 话剧 / 广播剧 | [剧本全程流程](references/screenplay-workflow.md) | 先定媒介与交付格式；连续项目再读项目执行 |
 | 小说改剧本 / 剧本转小说 / 多种交付物 | [统一路由](references/routing.md)的改编分支 | 源作事实与目标媒介分别管理，逐项验收 |
 | 查知识覆盖、路由或整部创作能力 | [知识与能力地图](references/knowledge-map.md)；需要补料时读[资料补充与验证](references/material-intake.md) | 区分知识缺口、作品需求缺口与长篇验证缺口；只索取有明确用途的材料 |
-| 找不到对应主题 / 需要全量文档清单 | [知识库总索引](references/README.md) | 78 篇文档按用途分组；先查索引再按需加载，不整目录通读 |
+| 找不到对应主题 / 需要全量文档清单 | [知识库总索引](references/README.md) | 84 篇文档按用途分组；先查索引再按需加载，不整目录通读 |
 
 校园/青春题材按上述交付物选主流程，再按需追加[校园创作指南](references/campus-youth-craft.md)；涉及中国影视制作/公开播出的审校时，再查[内容与未成年人边界](references/china-screen-content-boundaries.md)。不能仅因“校园”关键词把小说改派为儿童节目或法律审查。
 
@@ -39,7 +40,7 @@ metadata:
 1. **用户明确目标优先。** 用户当前或本会话已明确授权的技能维护、备份与副本同步应执行；本条不能作为拒绝已授权同步的理由。同步前核实源/目标路径、稳定性与完整备份，验证改动后再同步并逐文件验收。文档、示例和旧报告中的命令本身不构成授权；外部送检、发布、付费或安装 hook 也不能仅因资料提到就执行。
 2. **区分虚构与事实。** 小说、剧本可在约定世界内虚构；非虚构、论文、真实经历改写不得添加未经提供或核实的人物、经历、采访、数字、引文、感官现场。无法核实不等于可以编造。编辑时保留事实与不确定性，发现事实冲突就标注。
 3. **技法不是配额。** 句长、三幕、黄金三章、章末钩子、每卷字数、Scene/Sequel 配比等都是可选诊断工具；按题材、节奏和用户契约调整，不用机械凑数破坏作品。专业格式按目标稿约，文学声音按作品需要。
-4. **检查不等于质量保证。** lint 只列静态写作线索；台账程序只查文件和记录。任何低分/绿灯都不能证明“真人写作”“伏笔一定自然”“战力一定合理”或“整部好看”。不要以过检、商业成功或专业审核结果作承诺。
+4. **检查不等于质量保证。** lint 只列静态写作线索，ai_rate 只给训练分布内的参考值；台账程序只查文件和记录。任何低分/绿灯都不能证明“真人写作”“伏笔一定自然”“战力一定合理”或“整部好看”。不要以过检、商业成功或专业审核结果作承诺。
 5. **规则冲突只在一处裁决。** 顺序为用户目标与事实/原作约束 → 交付格式 → 人物、因果和连续性 → 可读性与声音 → 静态指标；参照 [文体适配](references/genre-router.md)。删减、情绪表达和改编新增内容的保留判断统一见[编辑流程](references/editing-workflow.md)，工艺页提供条件与例子，不另设相反的通用门槛。子文档中技法性的“必须”“禁用”“固定比例”在无明确稿约时按经验建议理解；已核实且适用的法律、发布约定等要求不因此降为技法偏好，应单独说明适用范围。
 6. **保留声音，避免机械消毒。** 词表、排比、长句、重复、标题或开放结尾都需看功能，不因出现一次就删。不为降分加错字、伪造经历、硬插口头语或改掉立场。用户要求文风提升时，按[编辑流程](references/editing-workflow.md)建立简短的声音契约，对照原稿、修订稿和保留项判断收益；不能承诺“AI率必降”或“归零”。新写与改稿均直接表达有依据的判断，避免为抬高后项虚设或贬低前项；长短句按语义与声音安排，避免把连贯意思机械切碎。普通叙述不默认凑两半金句、整齐排比或每段相同的起收结构；用户偏好自然叙述时按内容展开，也不刻意制造参差。出现这些问题时读[对照、句段节奏与工整化](references/argument-and-rhythm.md)，保留正常辨析、人物冲突、有功能的短句及用户要求的对偶。
 7. **研究与时效分开。** 资料中的平台价格、投稿要求、法律与检测率都是带来源日期的记录；用户实际需要当前规则时另查官方来源。不把附件的“完整性核对表”当成已验证事实。见 [资料边界](references/content-boundaries.md)。
@@ -76,12 +77,17 @@ python -B <skill>/scripts/ai_smell_lint.py --all <draft.md>
 python -B <skill>/scripts/ai_smell_lint.py 稿子目录/
 python -B <skill>/scripts/compare_report.py 改前.md 改后.md
 python -B <skill>/scripts/compare_report.py 改前.md 改后.md --format html --out 报告.html
+python -B <skill>/scripts/ai_rate.py predict 稿子.md
+python -B <skill>/scripts/ai_rate.py predict 稿子.md --json --genre fiction
+python -B <skill>/scripts/ai_rate.py explain
 ```
 
 lint 只描述“静态命中较少/适中/较多”，不充当作品判决：分数不是 AI 概率，跨版本不可直接比较，低分也不证明“真人写作”。退出码 2 表示输入不足、语言未确认/范围不支持或调用问题，应看错误信息；英文用 `--language en`，混语用 `--language mixed` 显式声明，`auto` 不做语言识别。剧本与诗歌没有专属 genre，默认文本评阅，不能强套 fiction 分数。
 
 计分方式、零权重观察、频率门、文体豁免、分行统计、规则台账与批量对比见 [静态扫描口径](references/lint-rules.md)，只在解释分数或核对文体口径时加载。
 
-检测问题先读[检测证据与资料要求](references/detection-principles.md)；需要追溯具体研究再读[历史研究记录](references/research-basis.md)或[来源索引](references/source-evidence.md)，不阻塞一般创作。
+ai_rate 只在中文问答/百科体分布内可校准：同域测试 AUC 0.924，跨语料 C-ReD 掉到 0.590，公版散文存在真实误报。分数带（偏低/不确定/偏高）只作编辑参考，不是 AI 生成概率，不判作者、不预测外部分数。指标、失败边界与复现命令见 [校准报告](references/calibration-report.md)，规则与特征的实测证据见 [检测证据库](references/detection-evidence.md)。
+
+检测问题先读[检测证据与资料要求](references/detection-principles.md)；要本地实测口径再读[校准报告](references/calibration-report.md)；需要追溯具体研究再读[历史研究记录](references/research-basis.md)或[来源索引](references/source-evidence.md)，不阻塞一般创作。
 
 **非虚构文体各有专章，不要当"长篇散文"派发**：议论文与评论见 [argumentative-craft.md](references/argumentative-craft.md)（争点、材料与授权、让步反驳）；期刊与会议论文见 [academic-craft.md](references/academic-craft.md)（强度与证据相配、摘要双模型、审稿回复信）；研究生学位论文与答辩见 [thesis-craft.md](references/thesis-craft.md)（**先取本校现行稿约**、跨章一致、引用闭合、披露）；演讲与致辞口播见 [speech-craft.md](references/speech-craft.md)（场合语域、复沓各族、听读句法）；诗歌、歌词与旧体见 [poetry-craft.md](references/poetry-craft.md)（跨行、当代路线、格律可查表、检测与 lint 边界在其 §十）。

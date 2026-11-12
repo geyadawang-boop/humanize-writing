@@ -1,0 +1,17 @@
+{
+  "run": "示例：只演示记录格式，不能直接用于汇总",
+  "runs": [
+    {
+      "id": "R01",
+      "first": "references/editing-workflow.md",
+      "final": ["references/editing-workflow.md"],
+      "loaded": ["references/editing-workflow.md"]
+    },
+    {
+      "id": "R02",
+      "first": "references/editing-workflow.md",
+      "final": ["references/editing-workflow.md"],
+      "loaded": ["references/editing-workflow.md"]
+    }
+  ]
+}

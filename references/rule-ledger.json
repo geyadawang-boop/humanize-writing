@@ -1,5 +1,5 @@
 {
-  "skill_version": "0.59",
+  "skill_version": "0.60",
   "ruleset_version": "0.46",
   "scope": "中文/声明英文的静态词表与结构启发式；不判作者身份、不预测外部检测",
   "genre_skips": {
@@ -68,6 +68,15 @@
         "language": "auto",
         "fingerprint": false,
         "candidates": false
+      },
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 2.3,
+        "ai_rate_pct": 1.5,
+        "diff_pp": -0.8,
+        "mean_weight_human": 0.8,
+        "mean_weight_ai": 0.8,
+        "verdict": "两侧命中率相差 <5 个百分点（不足以支撑该规则）"
       }
     },
     {
@@ -81,6 +90,15 @@
         "language": "auto",
         "fingerprint": false,
         "candidates": false
+      },
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 9.2,
+        "ai_rate_pct": 6.0,
+        "diff_pp": -3.2,
+        "mean_weight_human": 0,
+        "mean_weight_ai": 0,
+        "verdict": "两侧命中率相差 <5 个百分点（不足以支撑该规则）"
       }
     },
     {
@@ -120,6 +138,15 @@
         "language": "auto",
         "fingerprint": false,
         "candidates": false
+      },
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 0.1,
+        "ai_rate_pct": 0.5,
+        "diff_pp": 0.4,
+        "mean_weight_human": 4,
+        "mean_weight_ai": 4,
+        "verdict": "两侧命中率相差 <5 个百分点（不足以支撑该规则）"
       }
     },
     {
@@ -159,6 +186,15 @@
         "language": "auto",
         "fingerprint": false,
         "candidates": false
+      },
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 13.7,
+        "ai_rate_pct": 14.8,
+        "diff_pp": 1.1,
+        "mean_weight_human": 1.9,
+        "mean_weight_ai": 1.6,
+        "verdict": "两侧命中率相差 <5 个百分点（不足以支撑该规则）"
       }
     },
     {
@@ -198,6 +234,15 @@
         "language": "auto",
         "fingerprint": false,
         "candidates": false
+      },
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 0.4,
+        "ai_rate_pct": 0.1,
+        "diff_pp": -0.3,
+        "mean_weight_human": 8,
+        "mean_weight_ai": 8,
+        "verdict": "两侧命中率相差 <5 个百分点（不足以支撑该规则）"
       }
     },
     {
@@ -224,6 +269,15 @@
         "language": "auto",
         "fingerprint": false,
         "candidates": false
+      },
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 0.2,
+        "ai_rate_pct": 2.6,
+        "diff_pp": 2.4,
+        "mean_weight_human": 2.2,
+        "mean_weight_ai": 0,
+        "verdict": "两侧命中率相差 <5 个百分点（不足以支撑该规则）"
       }
     },
     {
@@ -263,6 +317,15 @@
         "language": "auto",
         "fingerprint": false,
         "candidates": false
+      },
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 2.0,
+        "ai_rate_pct": 3.5,
+        "diff_pp": 1.5,
+        "mean_weight_human": 5,
+        "mean_weight_ai": 5,
+        "verdict": "两侧命中率相差 <5 个百分点（不足以支撑该规则）"
       }
     },
     {
@@ -302,6 +365,15 @@
         "language": "auto",
         "fingerprint": false,
         "candidates": false
+      },
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 68.5,
+        "ai_rate_pct": 82.9,
+        "diff_pp": 14.4,
+        "mean_weight_human": 0,
+        "mean_weight_ai": 0,
+        "verdict": "AI 侧命中率更高（方向与本规则一致）"
       }
     },
     {
@@ -575,6 +647,15 @@
         "language": "auto",
         "fingerprint": false,
         "candidates": false
+      },
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 38.3,
+        "ai_rate_pct": 59.9,
+        "diff_pp": 21.6,
+        "mean_weight_human": 0,
+        "mean_weight_ai": 0,
+        "verdict": "AI 侧命中率更高（方向与本规则一致）"
       }
     },
     {
@@ -588,7 +669,24 @@
         "language": "auto",
         "fingerprint": false,
         "candidates": false
+      },
+      "measured_v060": {
+        "corpus": "HC3-Chinese 中文问答体（随包 5203 对）",
+        "human_rate_pct": 12.7,
+        "ai_rate_pct": 30.7,
+        "diff_pp": 18.0,
+        "mean_weight_human": 0,
+        "mean_weight_ai": 0,
+        "verdict": "AI 侧命中率更高（方向与本规则一致）"
       }
     }
-  ]
+  ],
+  "measurement": {
+    "script": "scripts/evidence_measure.py",
+    "corpus": "corpora/pairs（HC3-Chinese 子集，5203 对）",
+    "metric": "触发该规则的文本占比（%），diff_pp = AI 侧 - 人类侧",
+    "updated": "2026-11-12",
+    "matched_rules": 10,
+    "note": "本轮只登记实测，不改权重与阈值；ruleset_version 因此保持不变。"
+  }
 }

@@ -14,6 +14,8 @@
 | 改编、压缩、扩写到另一媒介 | 源作约束 + 目标媒介工作流，见第三节 | 仅把引号改成人名冒号 |
 | 写完整小说且附剧本 | 拆成有依赖的两个交付物，分别列完成范围 | 用梗概替代其中一项 |
 | 解释检测报告、验证某平台AI率、同时改善文风 | [detection-principles.md](detection-principles.md)核报告与资料；文风编辑再接editing-workflow | 把lint分数当平台概率，或没有报告就声称已降 |
+| 要一个本地“AI参与度”参考值、评估稿子偏离程度 | [calibration-report.md](calibration-report.md)先看分布与失败边界；只报分数带、分窗与IQR | 把0–1当AI生成概率，或据此判定作者、预测外部分数 |
+| 维护规则、权重或核对某条规则的证据 | [detection-evidence.md](detection-evidence.md) + [rule-ledger.json](rule-ledger.json)；实测口径见[rule-measurements.json](rule-measurements.json) | 只改脚本或凭印象调权重，不登记证据与分母 |
 | 审计这个 skill / 知识够不够 | [knowledge-map.md](knowledge-map.md) + 实际脚本与测试 | 写一段小说证明“能力完整” |
 
 已有作品优先识别续写/修订/评阅；没有作品且明确要正文时直接进入创作。只在媒介、事实边界或主方向缺失且无法合理推断时问关键问题。
@@ -82,7 +84,7 @@
 | 书信/档案/第二人称或实验叙事 | [form-devices-craft.md](form-devices-craft.md) + [narratology-craft.md](narratology-craft.md) | 装置是否改变信息分配，有没有读者入口 |
 | 需要范例、术语或标题样本 | [exemplar-close-reading.md](exemplar-close-reading.md)、[examples.md](examples.md)、[terminology-index.md](terminology-index.md)、[title-exemplars.md](title-exemplars.md) | 只借有效技法，不复制成段文本 |
 | 练习与长期成长 | [long-term-training.md](long-term-training.md) | 实际薄弱项与可重复的小练习 |
-| 检测统计、来源或“AI味”争议 | [detection-principles.md](detection-principles.md)；需要具体研究时再查research-basis/source-evidence | 平台与评分定义、同条件前后稿、样本、日期、文体、评价单位与限度；detect.md仅提供文本评阅 |
+| 检测统计、来源或“AI味”争议 | [detection-principles.md](detection-principles.md)；要本地实测口径再读[calibration-report.md](calibration-report.md)；需要具体研究时再查research-basis/source-evidence | 平台与评分定义、同条件前后稿、样本、日期、文体、评价单位与限度；detect.md仅提供文本评阅 |
 | 事实、平台投稿或题材边界 | [content-boundaries.md](content-boundaries.md) | 原始来源、日期、辖区/平台和具体稿约 |
 
 工具报警先回到对应原文核对原因；不能仅把台账日期更新成今天来消警。文笔、人设、因果、可拍性无法仅凭表格判断。
