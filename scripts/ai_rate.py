@@ -8,8 +8,9 @@
 它不做什么：
     - 不鉴定作者身份，不回答“这段是不是 AI 写的”；
     - 不预测知网、Turnitin、GPTZero、朱雀等外部产品的分数；
-    - 对训练分布之外的文本（声明为小说、剧本、诗歌、公文等，或特征检测判定为
-      分布外）返回 status=out_of_domain，拒绝给总分，只保留特征观察。
+    - 对训练分布之外的文本（声明为小说、剧本、诗歌、公文等，或全部分窗特征
+      检测判定为分布外）返回 status=out_of_domain，拒绝给总分，只保留特征观察；
+      长文逐窗检查，个别窗口异常时只剔除该窗，其余有效窗口照常汇总。
 
 用法：
     python -B scripts/ai_rate.py train --corpora corpora/pairs --out models/zh_hc3_logreg_v1.json
@@ -429,12 +430,17 @@ def predict_text(model, text, genre=None):
     segs = [text] if chars <= 1400 else [w[1] for w in F.windows(text, size=WINDOW_SIZE, max_windows=MAX_WINDOWS)]
     vecs = [F.vector(seg) for seg in segs]
     warns = _text_warnings(text)
-    reasons = list(_genre_reasons(genre))
+    genre_reasons = _genre_reasons(genre)
     window_reasons = [_z_reasons(model, vec) for vec in vecs]
-    for i, rs in enumerate(window_reasons):
-        if rs:
-            reasons.append("第 %d 窗：%s" % (i + 1, "；".join(rs)))
-    if reasons:
+    usable = [i for i, rs in enumerate(window_reasons) if not rs]
+
+    # 整篇拒分只有两种情形：声明文体不在训练分布，或全部分窗都异常。
+    # 个别窗口异常时只剔除该窗，其余有效窗口照常汇总。
+    if genre_reasons or not usable:
+        reasons = list(genre_reasons)
+        for i, rs in enumerate(window_reasons):
+            if rs:
+                reasons.append("第 %d 窗：%s" % (i + 1, "；".join(rs)))
         full_vec = vecs[0] if len(vecs) == 1 else F.vector(text)
         result = {
             "tool": "ai_rate",
@@ -442,33 +448,33 @@ def predict_text(model, text, genre=None):
             "model": model["model_name"],
             "chars": chars,
             "windows": len(segs),
+            "usable_windows": 0,
             "top_features": _ranked(model, full_vec),
             "observation_source": "full_text",
             "reasons": reasons,
             "warnings": warns,
             "is_authorship_judgment": False,
-            "message": "该文本不在模型训练分布内（声明文体或分窗特征异常），不提供总分与分数带；下列特征观察按整篇向量计算，只用于定位句子，不代表 AI 参与度。",
-            "note": "分布外拒给分是适用边界，不是对文本来源的判断；长文任一分窗分布外时拒绝整篇汇总。",
+            "message": "该文本不在模型训练分布内（声明文体或全部分窗特征异常），不提供总分与分数带；下列特征观察按整篇向量计算，只用于定位句子，不代表 AI 参与度。",
+            "note": "分布外拒给分是适用边界，不是对文本来源的判断；声明文体不在分布内或全部分窗异常时才拒绝整篇汇总。",
         }
-        if len(segs) > 1:
-            checks = []
-            for i, seg in enumerate(segs):
-                item = {
+        if len(segs) > 1 and not genre_reasons:
+            result["window_checks"] = [
+                {
                     "window": i + 1,
                     "chars": cjk_len(seg),
-                    "status": "out_of_domain" if window_reasons[i] else "ok",
+                    "status": "out_of_domain",
                     "reasons": window_reasons[i],
+                    "top_features": _ranked(model, vecs[i], 3),
                 }
-                if window_reasons[i]:
-                    item["top_features"] = _ranked(model, vecs[i], 3)
-                checks.append(item)
-            result["window_checks"] = checks
+                for i, seg in enumerate(segs)
+            ]
         return result
 
-    scores = [calibrated(model, [vec])[0] for vec in vecs]
-    order = sorted(range(len(scores)), key=lambda i: scores[i])
-    median_idx = order[len(order) // 2]
-    median = scores[median_idx]
+    scores = [calibrated(model, [vecs[i]])[0] for i in usable]
+    order = sorted(range(len(scores)), key=lambda k: scores[k])
+    mid = order[len(order) // 2]
+    median = scores[mid]
+    median_window = usable[mid]
     p25 = scores[order[int(0.25 * (len(scores) - 1))]]
     p75 = scores[order[int(0.75 * (len(scores) - 1))]]
     result = {
@@ -477,29 +483,41 @@ def predict_text(model, text, genre=None):
         "model": model["model_name"],
         "chars": chars,
         "windows": len(segs),
+        "usable_windows": len(usable),
         "score": round(median, 3),
         "score_iqr": [round(p25, 3), round(p75, 3)],
         "band": band_of(median),
-        "score_window": median_idx + 1,
-        "window_scores": [round(s, 3) for s in scores],
-        "top_features": _ranked(model, vecs[median_idx]),
+        "score_window": median_window + 1,
+        "top_features": _ranked(model, vecs[median_window]),
         "warnings": warns,
         "is_authorship_judgment": False,
         "note": "0–1 是训练分布内的校准参考值，不是“AI 生成概率”，不能用于判定作者。",
     }
     if len(segs) > 1:
-        result["windows_detail"] = [
-            {
+        score_by_window = {usable[k]: scores[k] for k in range(len(usable))}
+        checks = []
+        for i, seg in enumerate(segs):
+            item = {
                 "window": i + 1,
                 "chars": cjk_len(seg),
-                "score": round(scores[i], 3),
+                "status": "out_of_domain" if window_reasons[i] else "ok",
                 "top_features": _ranked(model, vecs[i], 3),
             }
-            for i, seg in enumerate(segs)
-        ]
+            if window_reasons[i]:
+                item["reasons"] = window_reasons[i]
+            else:
+                item["score"] = round(score_by_window[i], 3)
+            checks.append(item)
+        result["window_checks"] = checks
+        excluded = [i + 1 for i in range(len(segs)) if window_reasons[i]]
+        if excluded:
+            result["warnings"].append(
+                "第 %s 窗特征分布外，未计入汇总，只保留特征观察（见 window_checks）。"
+                % "、".join(str(n) for n in excluded)
+            )
         result["warnings"].append(
-            "分数与特征贡献同取第 %d 窗（中位窗）；其余窗口的分数与贡献见 windows_detail。"
-            % (median_idx + 1)
+            "分数与特征贡献同取第 %d 窗（有效窗口中位窗）；逐窗结果见 window_checks。"
+            % (median_window + 1)
         )
     return result
 
@@ -536,14 +554,22 @@ def format_report(r):
         lines.extend(_format_features(r.get("top_features", [])))
         lines.extend("注意：" + w for w in r.get("warnings", []))
         return "\n".join(lines)
+    window_note = "窗口 %d" % r["windows"]
+    if r.get("usable_windows", r["windows"]) < r["windows"]:
+        window_note += "，有效 %d" % r["usable_windows"]
     lines = [
-        "参考值 %.2f（%s；窗口 %d，IQR %.2f–%.2f）" % (
-            r["score"], r["band"], r["windows"], r["score_iqr"][0], r["score_iqr"][1]),
+        "参考值 %.2f（%s；%s，IQR %.2f–%.2f）" % (
+            r["score"], r["band"], window_note, r["score_iqr"][0], r["score_iqr"][1]),
         "训练分布：中文问答/百科体；跨体裁会偏移。此值不是作者判定，也不预测外部检测分数。",
     ]
     if r["windows"] > 1:
-        lines.append("分数与特征贡献同取第 %d 窗（中位窗）；分窗：%s" % (
-            r["score_window"], ", ".join("%.2f" % s for s in r["window_scores"])))
+        parts = [
+            "%d:%.2f" % (c["window"], c["score"]) if c["status"] == "ok"
+            else "%d:异常" % c["window"]
+            for c in r["window_checks"]
+        ]
+        lines.append("分数与特征贡献同取第 %d 窗（有效窗口中位窗）；分窗 %s" % (
+            r["score_window"], "，".join(parts)))
     lines.append("主要贡献（绝对值排序，正=偏 AI 侧，负=偏人写侧）：")
     lines.extend(_format_features(r["top_features"]))
     lines.extend("注意：" + w for w in r["warnings"])

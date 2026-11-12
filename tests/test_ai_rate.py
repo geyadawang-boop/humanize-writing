@@ -5,7 +5,8 @@
 1. 分数必须在 0–1 之间，且显式标记“不是作者判断”；
 2. 短文本拒绝评分，而不是给一个看似精确的数字；
 3. 模型文件里的指标与校准表必须存在，报告不能凭空引用；
-4. 分布外文本返回 out_of_domain 且不给分；长文逐窗检查，分数与贡献取自同一窗口。
+4. 分布外文本返回 out_of_domain 且不给分；长文逐窗检查，个别异常窗剔除后其余
+   有效窗口照常汇总，分数与贡献取自同一有效窗口；全部分窗异常才整篇拒分。
 """
 import importlib.util
 import io
@@ -88,7 +89,8 @@ class PredictTest(unittest.TestCase):
         self.assertEqual(out["is_authorship_judgment"], False)
         self.assertEqual(len(out["top_features"]), 8)
         self.assertEqual(out["score_window"], 1)
-        self.assertNotIn("windows_detail", out)
+        self.assertEqual(out["usable_windows"], 1)
+        self.assertNotIn("window_checks", out)
         self.assertIn(out["band"], {"偏低", "不确定", "偏高"})
         self.assertTrue(out["warnings"])
         self.assertIn("不是", out["note"])
@@ -96,7 +98,7 @@ class PredictTest(unittest.TestCase):
     def test_declared_genre_out_of_domain(self):
         out = R.predict_text(MODEL, HUMANISH, genre="fiction")
         self.assertEqual(out["status"], "out_of_domain")
-        for key in ("score", "score_iqr", "band", "window_scores"):
+        for key in ("score", "score_iqr", "band"):
             self.assertNotIn(key, out)
         self.assertTrue(out["reasons"])
         self.assertEqual(len(out["top_features"]), 8)
@@ -128,7 +130,7 @@ class PredictTest(unittest.TestCase):
                 _, reasons = R.domain_check(MODEL, HUMANISH, vec_with_z(n, mult))
                 self.assertEqual(bool(reasons), expect)
 
-    def test_any_window_out_of_domain_rejects_text(self):
+    def test_one_window_out_of_domain_is_excluded(self):
         original = R.F.vector
         calls = {"n": 0}
 
@@ -140,14 +142,37 @@ class PredictTest(unittest.TestCase):
 
         with mock.patch.object(R.F, "vector", side_effect=fake_vector):
             out = R.predict_text(MODEL, LONG_DOMAIN_TEXT)
-        self.assertEqual(out["status"], "out_of_domain")
-        self.assertNotIn("score", out)
-        self.assertNotIn("window_scores", out)
-        self.assertTrue(out["window_checks"])
-        self.assertEqual(out["window_checks"][0]["status"], "ok")
+        self.assertEqual(out["status"], "ok")
+        self.assertEqual(len(out["window_checks"]), out["windows"])
+        self.assertEqual(out["usable_windows"], out["windows"] - 1)
         self.assertEqual(out["window_checks"][1]["status"], "out_of_domain")
         self.assertNotIn("score", out["window_checks"][1])
+        self.assertTrue(out["window_checks"][1]["reasons"])
         self.assertTrue(out["window_checks"][1]["top_features"])
+        ok_windows = [c for c in out["window_checks"] if c["status"] == "ok"]
+        self.assertTrue(ok_windows)
+        self.assertTrue(all("score" in c for c in ok_windows))
+        self.assertNotEqual(out["score_window"], 2)
+        self.assertTrue(any("未计入汇总" in w for w in out["warnings"]))
+
+    def test_all_windows_out_of_domain_rejects_text(self):
+        with mock.patch.object(R.F, "vector", return_value=vec_with_z(6, 5.0)):
+            out = R.predict_text(MODEL, LONG_DOMAIN_TEXT)
+        self.assertEqual(out["status"], "out_of_domain")
+        self.assertEqual(out["usable_windows"], 0)
+        self.assertNotIn("score", out)
+        self.assertNotIn("band", out)
+        self.assertTrue(out["window_checks"])
+        self.assertTrue(all(c["status"] == "out_of_domain" for c in out["window_checks"]))
+        self.assertTrue(all("score" not in c for c in out["window_checks"]))
+        self.assertTrue(all(c["reasons"] for c in out["window_checks"]))
+
+    def test_single_window_out_of_domain_rejects_text(self):
+        with mock.patch.object(R.F, "vector", return_value=vec_with_z(6, 5.0)):
+            out = R.predict_text(MODEL, HUMANISH)
+        self.assertEqual(out["status"], "out_of_domain")
+        self.assertNotIn("score", out)
+        self.assertNotIn("window_checks", out)
 
     def test_out_of_domain_outputs_do_not_leak_score(self):
         out = R.predict_text(MODEL, HUMANISH, genre="fiction")
@@ -164,7 +189,7 @@ class PredictTest(unittest.TestCase):
             self.assertEqual(rc, 0)
             data = json.loads(buf.getvalue())["results"][0]["result"]
             self.assertEqual(data["status"], "out_of_domain")
-            for key in ("score", "score_iqr", "band", "window_scores"):
+            for key in ("score", "score_iqr", "band"):
                 self.assertNotIn(key, data)
         finally:
             if p.exists():
@@ -175,11 +200,12 @@ class PredictTest(unittest.TestCase):
         out = R.predict_text(MODEL, LONG_DOMAIN_TEXT)
         self.assertEqual(out["status"], "ok")
         self.assertGreater(out["windows"], 1)
-        self.assertEqual(len(out["windows_detail"]), out["windows"])
+        self.assertEqual(out["usable_windows"], out["windows"])
+        self.assertEqual(len(out["window_checks"]), out["windows"])
         idx = out["score_window"] - 1
-        self.assertEqual(out["windows_detail"][idx]["score"], out["score"])
+        self.assertEqual(out["window_checks"][idx]["score"], out["score"])
         self.assertEqual(
-            [it["name"] for it in out["windows_detail"][idx]["top_features"]],
+            [it["name"] for it in out["window_checks"][idx]["top_features"]],
             [it["name"] for it in out["top_features"][:3]],
         )
 

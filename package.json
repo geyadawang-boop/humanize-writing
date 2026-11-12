@@ -1,7 +1,7 @@
 {
   "name": "humanize-writing",
-  "version": "0.60.2",
-  "description": "中文与英文写作技能包：去 AI 味、拆套话、说人话，含 84 篇参考文档、13 套项目模板、8 个 Python 脚本、5203 对校准语料与 299 项自检",
+  "version": "0.60.3",
+  "description": "中文与英文写作技能包：去 AI 味、拆套话、说人话，含 84 篇参考文档、13 套项目模板、8 个 Python 脚本、5203 对校准语料与 301 项自检",
   "keywords": [
     "writing",
     "chinese",
