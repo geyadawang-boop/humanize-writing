@@ -24,7 +24,7 @@
 |---|---|---|---|
 | 短篇/中篇小说 | [by-genre.md](by-genre.md)小说节 + [structure-craft.md](structure-craft.md) | 人物、视角、对白专章 | 有完整事件与结束，不以梗概替代正文 |
 | 定长长篇小说（文学或类型） | [novel-workflow.md](novel-workflow.md)的整部长篇分支 + [project-workflow.md](project-workflow.md) | 结构、人物、视角、主题与相关题材资料 | 全书因果、群像/支线、完整正文与整书修订；不强套升级和日更 |
-| 长篇网文/滚动连载 | novel-workflow的连载分支 + project-workflow | novel-craft 分册相关节、分卷承诺、更新与反馈记录 | 按章推进、卷间承接、跨会话恢复；区分阶段交付与全书完结 |
+| 长篇网文/滚动连载 | novel-workflow的连载分支 + project-workflow | [novel-craft 分册](novel-craft.md)相关节、分卷承诺、更新与反馈记录 | 按章推进、卷间承接、跨会话恢复；区分阶段交付与全书完结 |
 | 电影剧本 | [screenplay-workflow.md](screenplay-workflow.md) | [chinese-screenplay-format.md](chinese-screenplay-format.md)或明确要求的好莱坞格式 | 整部连续场景与结局 |
 | 电视剧/横屏网剧 | 剧本工作流的分集结构 | 中文格式、分集大纲与A/B线 | 全季主线与每集目标均覆盖 |
 | 竖屏微短剧 | 剧本工作流的短剧分支 | 中文格式与场景成本 | 全部约定集数；钩子、兑现、终局相连 |
@@ -60,6 +60,7 @@
 | 论点站不住、让步与反驳失衡、造对手、判断句停在评价壳里 | [argumentative-craft.md](argumentative-craft.md)，句层再读[argument-and-rhythm.md](argument-and-rhythm.md) | 反方是否真被提出并有出处；材料与结论之间有无授权句；限定词对应哪个真实例外 |
 | 学位论文跨章术语/编号/引用不闭合、综述写成罗列、结论复读各章 | [thesis-craft.md](thesis-craft.md) | 本校现行稿约原文；引用双向闭合；该段是否新增可核查证据或推论 |
 | 长稿结构修订、中段停滞、人物漂移、重复情节或仓促结尾 | [longform-revision.md](longform-revision.md)，再按具体问题选下列工艺 | 实稿反向章场表、保留约束、前后依赖和修订后果；局部润色不启动全书重构 |
+| 长篇架构、平台连载、感情线、转场、命名、物象复现、无限流或中期管理需要选读 | [novel-craft.md](novel-craft.md) 分册索引 | 当前问题对应的分册与交付判断；不整包加载全部资料 |
 | 人物扁平、动机或转变突然 | [character-craft.md](character-craft.md) | 欲望、行动、代价、转变前后场景 |
 | 台词混同、交代生硬、直说与潜台词不合场景、署名或动作失当 | [dialogue-craft.md](dialogue-craft.md)；武侠加 [wuxia-dialogue.md](wuxia-dialogue.md) | 交流理由、原有立场、知识与辨人需要；不预设说明性对白或没有潜台词就是缺点 |
 | 视角漂移、人物知道不该知道的事 | [viewpoint-craft.md](viewpoint-craft.md) | 当前POV与角色获知时点 |
@@ -69,7 +70,7 @@
 | 战力/规则突然变动 | [power-craft.md](power-craft.md) + [wuxia-craft.md](wuxia-craft.md)（适用时） | 前置规则、资源、限制、代价与对手信息 |
 | 中段重复、高潮泄气、支线分散 | [structure-craft.md](structure-craft.md) + [spinoff-craft.md](spinoff-craft.md) | 目标/难度是否改变、支线是否影响主线 |
 | 时间、路程、年龄、伤势或物件矛盾 | [timeline-craft.md](timeline-craft.md) + [spatial-narrative-craft.md](spatial-narrative-craft.md) | 事件时间、地点与持有者/伤势状态 |
-| 描写堆砌、段落不相接 | [description-craft.md](description-craft.md) + [prose-flow-craft.md](prose-flow-craft.md) | 段落承担的行动/信息/感知变化 |
+| 描写堆砌、段落不相接；或要选读环境/白描/五感/Show don't tell/八类对象/范文精读 | [description-craft.md](description-craft.md) 分册索引 + [prose-flow-craft.md](prose-flow-craft.md) | 段落承担的行动/信息/感知变化；先按描写功能选分册 |
 | 画面/场面调度单薄 | [cinematic-craft.md](cinematic-craft.md) | 谁在何处、观众此刻看到/听到什么 |
 | 比喻、象征、重复、留白失效 | [rhetoric-craft.md](rhetoric-craft.md) | 首次建立与后续变形/兑现 |
 | 无依据的反衬/拉踩、虚假二选一、碎短句、对仗工整过度或段落套式重复 | [argument-and-rhythm.md](argument-and-rhythm.md)；具体段落衔接再读prose-flow-craft | 前项的依据、两项实际关系、停顿是否切断语义、工整是否添空话或挤掉信息；保留有功能的比较、短句和指定形式 |
