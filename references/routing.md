@@ -14,7 +14,7 @@
 | 改编、压缩、扩写到另一媒介 | 源作约束 + 目标媒介工作流，见第三节 | 仅把引号改成人名冒号 |
 | 写完整小说且附剧本 | 拆成有依赖的两个交付物，分别列完成范围 | 用梗概替代其中一项 |
 | 解释检测报告、验证某平台AI率、同时改善文风 | [detection-principles.md](detection-principles.md)核报告与资料；文风编辑再接editing-workflow | 把lint分数当平台概率，或没有报告就声称已降 |
-| 要一个本地“AI参与度”参考值、评估稿子偏离程度 | [calibration-report.md](calibration-report.md)先看分布与失败边界；只报分数带、分窗与IQR | 把0–1当AI生成概率，或据此判定作者、预测外部分数 |
+| 要一个本地“AI参与度”参考值、评估稿子偏离程度 | [calibration-report.md](calibration-report.md)先看分布与失败边界；分布外不给分，只报特征观察；分布内只报分数带、分窗与IQR | 把0–1当AI生成概率，或据此判定作者、预测外部分数 |
 | 维护规则、权重或核对某条规则的证据 | [detection-evidence.md](detection-evidence.md) + [rule-ledger.json](rule-ledger.json)；实测口径见[rule-measurements.json](rule-measurements.json) | 只改脚本或凭印象调权重，不登记证据与分母 |
 | 审计这个 skill / 知识够不够 | [knowledge-map.md](knowledge-map.md) + 实际脚本与测试 | 写一段小说证明“能力完整” |
 

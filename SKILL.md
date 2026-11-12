@@ -17,7 +17,7 @@ metadata:
 |---|---|---|
 | 改稿 / 去模板感 / 文风提升 | [编辑流程](references/editing-workflow.md) | 保留事实、立场和必要格式，按问题修改 |
 | 解释AI检测报告 / 核验某平台评分变化 | [检测证据与资料要求](references/detection-principles.md) | 先核评分口径和实际前后报告；同时要改善文风时再接编辑流程，不以本地lint冒充外部分数 |
-| 要一个“AI参与度”参考值 / 评估稿子偏离程度 | [校准报告](references/calibration-report.md) | 先看语料分布与失败边界；只报分数带与分窗IQR，不当作者判定，不换算外部分数 |
+| 要一个“AI参与度”参考值 / 评估稿子偏离程度 | [校准报告](references/calibration-report.md) | 先看语料分布与失败边界；分布外不给分，分布内只报分数带与分窗IQR，不当作者判定，不换算外部分数 |
 | 只查不改 / 评阅已有稿 | [编辑流程](references/editing-workflow.md)的评阅分支 | 报位置、问题、影响与建议，不写回原稿 |
 | 起标题 / 改标题 | [标题工艺](references/title-craft.md) | 按用户要的数量给候选；只改标题不重写正文 |
 | 新写短篇、诗歌、散文或文章 | [统一路由](references/routing.md) | 选对应文体专章；小任务直接写，无须建立项目台账 |
@@ -78,7 +78,8 @@ python -B <skill>/scripts/ai_smell_lint.py 稿子目录/
 python -B <skill>/scripts/compare_report.py 改前.md 改后.md
 python -B <skill>/scripts/compare_report.py 改前.md 改后.md --format html --out 报告.html
 python -B <skill>/scripts/ai_rate.py predict 稿子.md
-python -B <skill>/scripts/ai_rate.py predict 稿子.md --json --genre fiction
+python -B <skill>/scripts/ai_rate.py predict 稿子.md --json --genre qa
+python -B <skill>/scripts/ai_rate.py predict 小说.md --genre fiction
 python -B <skill>/scripts/ai_rate.py explain
 ```
 
@@ -86,7 +87,7 @@ lint 只描述“静态命中较少/适中/较多”，不充当作品判决：�
 
 计分方式、零权重观察、频率门、文体豁免、分行统计、规则台账与批量对比见 [静态扫描口径](references/lint-rules.md)，只在解释分数或核对文体口径时加载。
 
-ai_rate 只在中文问答/百科体分布内可校准：同域测试 AUC 0.924，跨语料 C-ReD 掉到 0.590，公版散文存在真实误报。分数带（偏低/不确定/偏高）只作编辑参考，不是 AI 生成概率，不判作者、不预测外部分数。指标、失败边界与复现命令见 [校准报告](references/calibration-report.md)，规则与特征的实测证据见 [检测证据库](references/detection-evidence.md)。
+ai_rate 只在中文问答/百科体分布内可校准：同域测试 AUC 0.924，跨语料 C-ReD 掉到 0.590，公版散文存在真实误报。声明为其他文体或有 6 个以上特征远离训练分布时，返回 `status: out_of_domain`，不给分，只保留特征观察；给分时长文分数与贡献同取中位窗。分数带只作编辑参考，不是 AI 生成概率，不判作者、不预测外部分数。指标、失败边界与复现命令见 [校准报告](references/calibration-report.md)，规则与特征的实测证据见 [检测证据库](references/detection-evidence.md)。
 
 检测问题先读[检测证据与资料要求](references/detection-principles.md)；要本地实测口径再读[校准报告](references/calibration-report.md)；需要追溯具体研究再读[历史研究记录](references/research-basis.md)或[来源索引](references/source-evidence.md)，不阻塞一般创作。
 

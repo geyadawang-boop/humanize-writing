@@ -4,7 +4,7 @@
 
 | 项目 | 说明 |
 |---|---|
-| 当前版本 | v0.60.0（程序与 lint 规则集 0.46） |
+| 当前版本 | v0.60.1（程序与 lint 规则集 0.46） |
 | 文档语言 | 简体中文 |
 | 运行依赖 | Python 3.8+，仅标准库，无需安装第三方包 |
 | 许可证 | [Apache-2.0](LICENSE) |
@@ -47,7 +47,7 @@ Claude Code（macOS/Linux）: ~/.claude/skills/humanize-writing
 
 Trae 或其他支持 `SKILL.md` 的环境放入各自的 skills 目录即可。技能以自身根目录定位脚本，不依赖当前工作目录。
 
-也可以用 npm 做内容分发（不提供 CLI）：`npm pack` 生成 `humanize-writing-0.60.0.tgz`，解包后把其中的 `humanize-writing/` 复制到上面的技能目录。
+也可以用 npm 做内容分发（不提供 CLI）：`npm pack` 生成 `humanize-writing-0.60.1.tgz`，解包后把其中的 `humanize-writing/` 复制到上面的技能目录。
 
 **2. 验证安装**
 
@@ -108,7 +108,7 @@ python -B scripts/writing_project.py checkpoint ./我的小说 --next "核读第
 ### 5. 检查不等于质量保证
 
 - `ai_smell_lint.py` 输出的是**静态命中强度**（0–100 的加权计数），JSON 中明确标记 `is_ai_probability=false`，25/40 只是提示阈值。
-- `ai_rate.py` 输出的是**训练分布内的参考值**（0–1 + 分数带 + 分窗 IQR），JSON 中标记 `is_authorship_judgment=false`；同域测试 AUC 0.924，但跨语料 C-ReD 只有 0.590，公版散文有真实误报。它不是 AI 生成概率，也不预测任何外部产品分数。
+- `ai_rate.py` 输出的是**训练分布内的参考值**（0–1 + 分数带 + 分窗 IQR），JSON 中标记 `is_authorship_judgment=false`；声明非问答/百科文体或检测到分布外时返回 `status: out_of_domain`，不给总分，只保留特征观察。同域测试 AUC 0.924，但跨语料 C-ReD 只有 0.590，公版散文有真实误报。它不是 AI 生成概率，也不预测任何外部产品分数。
 - `ledger_check.py` 只检查伏笔、战力、改纲、疑问、情绪窗口与完结处置的记录是否自洽；红灯黄灯都不等于“作品好/坏”。
 - 缺失文件、错表头、空表、占位符会被记为“检查未完成”，**不允许假绿**。
 
@@ -123,7 +123,7 @@ python -B scripts/writing_project.py checkpoint ./我的小说 --next "核读第
 | 改稿、去模板感、文风提升 | 修订稿 + 保留项说明 | [编辑流程](references/editing-workflow.md) |
 | 只查不改、评阅已有稿 | 带位置、影响与优先级的评阅 | [编辑流程](references/editing-workflow.md) |
 | 解释 AI 检测报告 / 核验评分变化 | 口径核查与证据边界说明 | [检测证据与资料要求](references/detection-principles.md) |
-| 要一个本地“AI 参与度”参考值 | 0–1 参考值 + 分数带 + 分窗 IQR + 前 8 项特征贡献 | [校准报告](references/calibration-report.md) |
+| 要一个本地“AI 参与度”参考值 | 0–1 参考值 + 分数带 + 分窗 IQR + 前 8 项特征贡献；分布外返回 `out_of_domain`，不给分 | [校准报告](references/calibration-report.md) |
 | 起标题、改标题 | 按数量要求给候选 | [标题工艺](references/title-craft.md) |
 | 新写短篇、散文、诗歌、文章 | 正文成稿 | [统一路由](references/routing.md) |
 | 句子别扭、重心不清、修饰语堆叠、收尾发虚 | 句层诊断与逐类修订 | [汉语行文决断](references/han-prose-grammar.md) |
@@ -169,7 +169,7 @@ humanize-writing/
 │   ├── ai_rate.py           # 校准参考分：train / eval / predict / explain
 │   ├── corpus_build.py      # 语料下载、清洗、切分与 manifest 校验
 │   └── evidence_measure.py  # 在冻结语料上测量规则与特征的区分力
-└── tests/                   # 22 组、293 项单元测试 + 真实任务评测集 + selftest + 冻结语料
+└── tests/                   # 22 组、295 项单元测试 + 真实任务评测集 + selftest + 冻结语料
 ```
 
 ## 命令行工具
@@ -275,18 +275,19 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --seman
 
 ```bash
 python -B scripts/ai_rate.py predict 稿子.md
-python -B scripts/ai_rate.py predict 稿子.md --json --genre fiction
+python -B scripts/ai_rate.py predict 稿子.md --json --genre qa
+python -B scripts/ai_rate.py predict 小说.md --genre fiction   # 分布外，不给分
 python -B scripts/ai_rate.py eval --model models/zh_hc3_logreg_v1.json
 python -B scripts/ai_rate.py explain
 ```
 
-用 31 个可解释特征（句长分布、型例比、套话密度、段首重复等）做逻辑回归，再用 Platt 校准映射到 0–1。输出分数带（偏低 / 不确定 / 偏高）、分窗 IQR、前 8 项特征贡献与分布外警告；汉字不足 100 个时拒绝评分。
+用 31 个可解释特征（句长分布、型例比、套话密度、段首重复等）做逻辑回归，再用 Platt 校准映射到 0–1。分布内输出分数带（偏低 / 不确定 / 偏高）、分窗 IQR 与前 8 项特征贡献；汉字不足 100 个时拒绝评分。超过 1400 字时按约 320 字切窗（最多 8 窗），总分取中位窗，特征贡献同取该窗，逐窗分数与贡献见 `windows_detail`。
 
 **只在训练分布内解读**：训练语料是中文问答/百科体（HC3-Chinese 5203 对）。同域测试 AUC 0.9243（95% CI 0.9124–0.9376）、EER 0.1613、Brier 0.1088；跨语料 C-ReD 只有 0.590；鲁迅《影的告别》误报 0.94。因此：
 
 - 不回答“这段是不是 AI 写的”，不判定作者；
 - 不预测知网、Turnitin、GPTZero、朱雀等外部产品的分数；
-- 对长篇、诗歌、剧本、公文不承诺可信概率，JSON 会带 `warnings`；
+- 声明为小说、剧本、诗歌、公文等非问答/百科文体，或有 6 个以上特征远离训练分布时，JSON 返回 `status: out_of_domain`，隐藏 `score`、`score_iqr`、`band` 与 `window_scores`，只保留 `reasons` 和特征观察；
 - 不能拿它给改稿“刷分”，也不能把分数下降当文风改善。
 
 指标、校准表、失败边界与禁用场景见 [校准报告](references/calibration-report.md)；特征清单与证据编号见 `ai_rate.py explain`。
@@ -308,7 +309,7 @@ python -B scripts/evidence_measure.py
 | `ledger_check.py` | 检查完整且无红线（仍可能有黄线） | 存在红线 | 输入不完整或调用错误（优先于红线） |
 | `ai_smell_lint.py` | 未超静态阈值 | 超过静态阈值，需按文体核读 | 输入不足、语言未确认或参数错误 |
 | `compare_report.py` | 报告已生成 | — | 输入或判读 JSON 无法读取 |
-| `ai_rate.py` | 已评分 / 已训练 / 已打印（含 `insufficient` 与分布外警告） | — | 输入无法解码或参数错误 |
+| `ai_rate.py` | 已评分 / 已训练 / 已打印（含 `insufficient` 与 `out_of_domain`） | — | 输入无法解码或参数错误 |
 
 退出码 0 只说明**该工具在该口径下通过了**，不构成作品质量结论。
 
@@ -318,7 +319,7 @@ python -B scripts/evidence_measure.py
 
 | 项目 | 现状 |
 |---|---|
-| 自动化测试 | 293 项 unittest 全部通过；`selftest.py` RC=0 |
+| 自动化测试 | 295 项 unittest 全部通过；`selftest.py` RC=0 |
 | 语义评测 | `tests/eval/`：26 条路由用例、7 组改稿盲评、3 条长篇续写漂移；需另起模型会话按协议运行 |
 | 结构审计 | 全部文件 UTF-8 / LF；本地链接可达；84 篇 references 均有加载入口 |
 | 规则台账 | 41 条（加权 16 / 观察 15 / 状态 10），探针逐条驱动；10 条附 HC3 实测登记 |

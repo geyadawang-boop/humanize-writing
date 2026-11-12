@@ -8,13 +8,15 @@
 它不做什么：
     - 不鉴定作者身份，不回答“这段是不是 AI 写的”；
     - 不预测知网、Turnitin、GPTZero、朱雀等外部产品的分数；
-    - 不对训练分布之外的长文、诗歌、剧本、公文给出可信概率（会显式警告）。
+    - 对训练分布之外的文本（声明为小说、剧本、诗歌、公文等，或特征检测判定为
+      分布外）返回 status=out_of_domain，拒绝给总分，只保留特征观察。
 
 用法：
     python -B scripts/ai_rate.py train --corpora corpora/pairs --out models/zh_hc3_logreg_v1.json
     python -B scripts/ai_rate.py eval --model models/zh_hc3_logreg_v1.json
     python -B scripts/ai_rate.py predict 稿子.md
-    python -B scripts/ai_rate.py predict 稿子.md --json --genre fiction
+    python -B scripts/ai_rate.py predict 稿子.md --json --genre qa
+    python -B scripts/ai_rate.py predict 小说.md --genre fiction   # 分布外，不给分
     python -B scripts/ai_rate.py explain        # 打印特征清单与证据编号
 """
 
@@ -36,6 +38,11 @@ ROOT = os.path.dirname(HERE)
 MIN_CJK = 100
 MAX_WINDOWS = 8
 WINDOW_SIZE = 320
+
+# 分布外判定：声明的文体不在训练分布，或过多特征远离训练均值
+OOD_Z = 4.0
+OOD_FEATURE_COUNT = 6
+IN_DOMAIN_GENRES = ("问答", "百科", "qa", "encyclopedia", "wiki", "expository")
 
 # 分数带：只用于报告语言，不是身份判定阈值
 BANDS = ((0.35, "偏低"), (0.65, "不确定"), (1.01, "偏高"))
@@ -356,26 +363,43 @@ def _contributions(model, vec):
     return items
 
 
-def ood_warnings(model, text, vec, genre=None):
+def _ranked(model, vec, k=8):
+    return sorted(_contributions(model, vec), key=lambda x: abs(x["contribution"]), reverse=True)[:k]
+
+
+def _in_domain_genre(genre):
+    g = genre.strip().lower()
+    return any(tag in g for tag in IN_DOMAIN_GENRES)
+
+
+def domain_check(model, text, vec, genre=None):
+    """返回 (warnings, ood_reasons)。
+
+    ood_reasons 非空表示文本不在训练分布内：调用方必须拒绝给分，只保留特征观察。
+    warnings 是可以继续参考的提示，不影响是否评分。
+    """
     warns = []
+    reasons = []
     chars = cjk_len(text)
-    if genre:
-        warns.append(
-            "已声明文体「%s」，但模型训练分布是%s；跨体裁分数仅供参考。" % (genre, TRAINING_DOMAIN)
+    if genre and not _in_domain_genre(genre):
+        reasons.append(
+            "声明文体「%s」不属于训练分布（%s），模型未在该文体上校准。"
+            % (genre, TRAINING_DOMAIN)
         )
-    big = [n for n, v in zip(model["feature_names"], vec)
-           if abs((v - model["mu"][model["feature_names"].index(n)]) /
-                  model["sd"][model["feature_names"].index(n)]) > 4.0]
-    if len(big) >= 6:
-        warns.append(
-            "有 %d 个特征落在训练分布 4 个标准差之外（如 %s），属于分布外样本，分数不可信。"
-            % (len(big), "、".join(big[:4]))
+    big = [
+        name for j, (name, v) in enumerate(zip(model["feature_names"], vec))
+        if abs((v - model["mu"][j]) / model["sd"][j]) > OOD_Z
+    ]
+    if len(big) >= OOD_FEATURE_COUNT:
+        reasons.append(
+            "有 %d 个特征落在训练分布 %.0f 个标准差之外（%s），判定为分布外。"
+            % (len(big), OOD_Z, "、".join(big[:4]))
         )
     if chars < 300:
         warns.append("文本仅 %d 个汉字，特征不稳定；建议 ≥300 字再参考。" % chars)
     if re.search(r"(?m)^\s*(第[一二三四五六七八九十百]+[章节回幕场]|[一二三四五六七八九十]+、)", text):
         warns.append("检测到章节/条款编号，结构类特征可能被体裁格式主导。")
-    return warns
+    return warns, reasons
 
 
 def predict_text(model, text, genre=None):
@@ -389,22 +413,32 @@ def predict_text(model, text, genre=None):
             "is_authorship_judgment": False,
         }
     segs = [text] if chars <= 1400 else [w[1] for w in F.windows(text, size=WINDOW_SIZE, max_windows=MAX_WINDOWS)]
-    scores = []
-    all_vecs = []
-    for seg in segs:
-        vec = F.vector(seg)
-        all_vecs.append(vec)
-        scores.append(calibrated(model, [vec])[0])
-    scores_sorted = sorted(scores)
-    median = scores_sorted[len(scores_sorted) // 2]
-    p25 = scores_sorted[int(0.25 * (len(scores_sorted) - 1))]
-    p75 = scores_sorted[int(0.75 * (len(scores_sorted) - 1))]
-    full_vec = F.vector(text)
-    contrib = sorted(_contributions(model, full_vec), key=lambda x: abs(x["contribution"]), reverse=True)[:8]
-    warns = ood_warnings(model, text, full_vec, genre)
-    if len(segs) > 1:
-        warns.append("分数取分窗中位数，而特征贡献按整篇向量计算；两者口径不同，贡献只用于定位句子。")
-    return {
+    vecs = [F.vector(seg) for seg in segs]
+    full_vec = vecs[0] if len(vecs) == 1 else F.vector(text)
+    warns, reasons = domain_check(model, text, full_vec, genre)
+    if reasons:
+        return {
+            "tool": "ai_rate",
+            "status": "out_of_domain",
+            "model": model["model_name"],
+            "chars": chars,
+            "windows": len(segs),
+            "top_features": _ranked(model, full_vec),
+            "observation_source": "full_text",
+            "reasons": reasons,
+            "warnings": warns,
+            "is_authorship_judgment": False,
+            "message": "该文本不在模型训练分布内，不提供总分与分数带；下列特征观察按整篇向量计算，只用于定位句子，不代表 AI 参与度。",
+            "note": "分布外拒给分是适用边界，不是对文本来源的判断。",
+        }
+
+    scores = [calibrated(model, [vec])[0] for vec in vecs]
+    order = sorted(range(len(scores)), key=lambda i: scores[i])
+    median_idx = order[len(order) // 2]
+    median = scores[median_idx]
+    p25 = scores[order[int(0.25 * (len(scores) - 1))]]
+    p75 = scores[order[int(0.75 * (len(scores) - 1))]]
+    result = {
         "tool": "ai_rate",
         "status": "ok",
         "model": model["model_name"],
@@ -413,12 +447,28 @@ def predict_text(model, text, genre=None):
         "score": round(median, 3),
         "score_iqr": [round(p25, 3), round(p75, 3)],
         "band": band_of(median),
+        "score_window": median_idx + 1,
         "window_scores": [round(s, 3) for s in scores],
-        "top_features": contrib,
+        "top_features": _ranked(model, vecs[median_idx]),
         "warnings": warns,
         "is_authorship_judgment": False,
         "note": "0–1 是训练分布内的校准参考值，不是“AI 生成概率”，不能用于判定作者。",
     }
+    if len(segs) > 1:
+        result["windows_detail"] = [
+            {
+                "window": i + 1,
+                "chars": cjk_len(seg),
+                "score": round(scores[i], 3),
+                "top_features": _ranked(model, vecs[i], 3),
+            }
+            for i, seg in enumerate(segs)
+        ]
+        result["warnings"].append(
+            "分数与特征贡献同取第 %d 窗（中位窗）；其余窗口的分数与贡献见 windows_detail。"
+            % (median_idx + 1)
+        )
+    return result
 
 
 def read_text(path):
@@ -431,22 +481,39 @@ def read_text(path):
     raise SystemExit("无法解码：%s（支持 UTF-8 / GB18030）" % path)
 
 
+def _format_features(items):
+    return [
+        "  %+.2f  %s（实测 %.2f）·证据 %s" % (
+            it["contribution"], it["label"], it["value"], ",".join(it["evidence"]) or "—")
+        for it in items
+    ]
+
+
 def format_report(r):
-    if r.get("status") != "ok":
+    status = r.get("status")
+    if status == "insufficient":
         return r.get("message", "无法评分")
+    if status == "out_of_domain":
+        lines = [
+            r.get("message", "该文本不在训练分布内，不提供总分。"),
+            "原因：",
+        ]
+        lines.extend("  - " + reason for reason in r.get("reasons", []))
+        lines.append("特征观察（按整篇向量计算，不含总分；正=偏 AI 侧，负=偏人写侧）：")
+        lines.extend(_format_features(r.get("top_features", [])))
+        lines.extend("注意：" + w for w in r.get("warnings", []))
+        return "\n".join(lines)
     lines = [
         "参考值 %.2f（%s；窗口 %d，IQR %.2f–%.2f）" % (
             r["score"], r["band"], r["windows"], r["score_iqr"][0], r["score_iqr"][1]),
         "训练分布：中文问答/百科体；跨体裁会偏移。此值不是作者判定，也不预测外部检测分数。",
     ]
     if r["windows"] > 1:
-        lines.append("分窗：%s" % ", ".join("%.2f" % s for s in r["window_scores"]))
+        lines.append("分数与特征贡献同取第 %d 窗（中位窗）；分窗：%s" % (
+            r["score_window"], ", ".join("%.2f" % s for s in r["window_scores"])))
     lines.append("主要贡献（绝对值排序，正=偏 AI 侧，负=偏人写侧）：")
-    for it in r["top_features"]:
-        lines.append("  %+.2f  %s（实测 %.2f）·证据 %s" % (
-            it["contribution"], it["label"], it["value"], ",".join(it["evidence"]) or "—"))
-    for w in r["warnings"]:
-        lines.append("注意：" + w)
+    lines.extend(_format_features(r["top_features"]))
+    lines.extend("注意：" + w for w in r["warnings"])
     return "\n".join(lines)
 
 
@@ -518,7 +585,7 @@ def main(argv=None):
     p = sub.add_parser("predict", help="给文本打分")
     p.add_argument("paths", nargs="+")
     p.add_argument("--model", default=os.path.join(ROOT, "models", "zh_hc3_logreg_v1.json"))
-    p.add_argument("--genre", default=None, help="声明文体（仅用于提示跨域风险）")
+    p.add_argument("--genre", default=None, help="声明文体；问答/百科属训练分布，其他文体返回 out_of_domain")
     p.add_argument("--json", action="store_true")
 
     e = sub.add_parser("eval", help="在项目内外部集上评估")

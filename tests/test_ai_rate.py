@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """ai_rate：模型契约、评分输出与命令行。
 
-重点守住三条边界：
+重点守住四条边界：
 1. 分数必须在 0–1 之间，且显式标记“不是作者判断”；
 2. 短文本拒绝评分，而不是给一个看似精确的数字；
-3. 模型文件里的指标与校准表必须存在，报告不能凭空引用。
+3. 模型文件里的指标与校准表必须存在，报告不能凭空引用；
+4. 分布外文本返回 out_of_domain 且不给分；长文分数与贡献取自同一窗口。
 """
 import importlib.util
 import io
@@ -33,6 +34,12 @@ LONG_AIISH = (
     "也涉及结构性因素。值得注意的是，相关研究已经表明，二者之间存在复杂的互动关系。"
     "综上所述，只有在充分理解其内在逻辑的基础上，才能形成更为全面的认识。"
 ) * 3
+# 拼接训练域内的人类回答，得到超过 1400 字、不会被分布外规则拦截的长文本
+LONG_DOMAIN_TEXT = "\n\n".join(
+    json.loads(line)["human"]
+    for line in (ROOT / "corpora" / "pairs" / "hc3_test.jsonl").read_text(encoding="utf-8").splitlines()[:12]
+    if line.strip()
+)
 
 
 class ModelContractTest(unittest.TestCase):
@@ -66,15 +73,39 @@ class PredictTest(unittest.TestCase):
         self.assertNotIn("score", out)
 
     def test_normal_text_shape(self):
-        out = R.predict_text(MODEL, HUMANISH, genre="prose")
+        out = R.predict_text(MODEL, HUMANISH, genre="qa")
         self.assertEqual(out["status"], "ok")
         self.assertGreaterEqual(out["score"], 0.0)
         self.assertLessEqual(out["score"], 1.0)
         self.assertEqual(out["is_authorship_judgment"], False)
         self.assertEqual(len(out["top_features"]), 8)
+        self.assertEqual(out["score_window"], 1)
+        self.assertNotIn("windows_detail", out)
         self.assertIn(out["band"], {"偏低", "不确定", "偏高"})
         self.assertTrue(out["warnings"])
         self.assertIn("不是", out["note"])
+
+    def test_declared_genre_out_of_domain(self):
+        out = R.predict_text(MODEL, HUMANISH, genre="fiction")
+        self.assertEqual(out["status"], "out_of_domain")
+        for key in ("score", "score_iqr", "band", "window_scores"):
+            self.assertNotIn(key, out)
+        self.assertTrue(out["reasons"])
+        self.assertEqual(len(out["top_features"]), 8)
+        self.assertEqual(out["is_authorship_judgment"], False)
+
+    def test_long_text_windows_aligned(self):
+        self.assertGreater(R.cjk_len(LONG_DOMAIN_TEXT), 1400)
+        out = R.predict_text(MODEL, LONG_DOMAIN_TEXT)
+        self.assertEqual(out["status"], "ok")
+        self.assertGreater(out["windows"], 1)
+        self.assertEqual(len(out["windows_detail"]), out["windows"])
+        idx = out["score_window"] - 1
+        self.assertEqual(out["windows_detail"][idx]["score"], out["score"])
+        self.assertEqual(
+            [it["name"] for it in out["windows_detail"][idx]["top_features"]],
+            [it["name"] for it in out["top_features"][:3]],
+        )
 
     def test_iqr_brackets_score(self):
         out = R.predict_text(MODEL, LONG_AIISH)
