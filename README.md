@@ -4,7 +4,7 @@
 
 | 项目 | 说明 |
 |---|---|
-| 当前版本 | v0.59（程序与 lint 规则集 0.46） |
+| 当前版本 | v0.59.1（程序与 lint 规则集 0.46） |
 | 文档语言 | 简体中文 |
 | 运行依赖 | Python 3.8+，仅标准库，无需安装第三方包 |
 | 许可证 | [Apache-2.0](LICENSE) |
@@ -47,7 +47,7 @@ Claude Code（macOS/Linux）: ~/.claude/skills/humanize-writing
 
 Trae 或其他支持 `SKILL.md` 的环境放入各自的 skills 目录即可。技能以自身根目录定位脚本，不依赖当前工作目录。
 
-也可以用 npm 做内容分发（不提供 CLI）：`npm pack` 生成 `humanize-writing-0.59.0.tgz`，解包后把其中的 `humanize-writing/` 复制到上面的技能目录。
+也可以用 npm 做内容分发（不提供 CLI）：`npm pack` 生成 `humanize-writing-0.59.1.tgz`，解包后把其中的 `humanize-writing/` 复制到上面的技能目录。
 
 **2. 验证安装**
 
@@ -83,7 +83,7 @@ python -B scripts/writing_project.py checkpoint ./我的小说 --next "核读第
 
 每次任务先分清四个维度：**操作**（新写/续写/改稿/评阅/改编）→ **作品**（文体与媒介）→ **阶段**（立项/推进/修订/完结）→ **症状**（当前具体问题）。入口只有一条：[统一路由](references/routing.md)。旧 A–I 模式仅作兼容别名。
 
-按需加载，单次优先解决一两个主要问题，不把 63 份文档与规则台账塞进一次创作。这是本技能与“大而全提示词”的根本区别：**知识量不等于上下文里的字数量**。
+按需加载，单次优先解决一两个主要问题，不把 64 份文档与规则台账塞进一次创作。这是本技能与“大而全提示词”的根本区别：**知识量不等于上下文里的字数量**。
 
 ### 2. 知识、记录、程序三层分离
 
@@ -146,7 +146,7 @@ humanize-writing/
 ├── CHANGELOG.md             # 版本变更记录
 ├── package.json             # npm 包元数据（内容分发，不暴露 CLI）
 ├── LICENSE                  # Apache-2.0
-├── references/              # 63 份按需读取的工艺、流程与证据文档 + 规则台账
+├── references/              # 64 份按需读取的工艺、流程与证据文档 + 规则台账
 │   ├── README.md            # 分类索引（建议从这里进入）
 │   ├── routing.md           # 唯一任务分派入口
 │   ├── editing-workflow.md  # 改稿 / 评阅 / 停止条件
@@ -160,7 +160,7 @@ humanize-writing/
 │   ├── ledger_check.py      # 6 组台账检查
 │   ├── ai_smell_lint.py     # 静态写作线索扫描
 │   └── compare_report.py    # 改前改后对比报告
-└── tests/                   # 17 组、249 项单元测试 + selftest + 6 套冻结语料
+└── tests/                   # 17 组、250 项单元测试 + selftest + 6 套冻结语料
 ```
 
 ## 命令行工具
@@ -279,8 +279,8 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --seman
 
 | 项目 | 现状 |
 |---|---|
-| 自动化测试 | 249 项 unittest 全部通过；`selftest.py` RC=0 |
-| 结构审计 | 574 个文件全部 UTF-8 / LF；本地链接可达；63 篇 references 均有加载入口 |
+| 自动化测试 | 250 项 unittest 全部通过；`selftest.py` RC=0 |
+| 结构审计 | 575 个文件全部 UTF-8 / LF；本地链接可达；64 篇 references 均有加载入口 |
 | 规则台账 | 41 条（加权 16 / 观察 15 / 状态 10），探针逐条驱动 |
 | 冻结语料 | 6 套（含 HC3 与 CReD 配对集），方向测试锁定权重 |
 | 端到端 | `init` → 写章 → `lint` → 改写 → `compare_report` → `checkpoint` → `check` |
@@ -312,7 +312,7 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --seman
 
 ## 文档索引
 
-- [references/README.md](references/README.md)：63 份文档与规则台账的分类索引（路由 / 流程 / 小说工艺 / 文体 / 边界与检测 / 研究档案）。
+- [references/README.md](references/README.md)：64 份文档与规则台账的分类索引（路由 / 流程 / 小说工艺 / 文体 / 边界与检测 / 研究档案）。
 - [templates/README.md](templates/README.md)：模板分工、每章更新、整书核读与台账检查语义。
 - [SKILL.md](SKILL.md)：智能体执行入口，含任务分派表与共同边界。
 

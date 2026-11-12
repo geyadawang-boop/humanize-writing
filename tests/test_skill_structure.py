@@ -109,6 +109,19 @@ class SkillStructureTests(unittest.TestCase):
         self.assertEqual(sections, sorted(sections, key=lambda v: tuple(map(int, v.split('.'))), reverse=True),
                          '版本记录必须按版本号降序排列')
 
+    def test_entry_delegates_lint_details_to_reference(self):
+        """入口只留分派、边界与调用方式；计分口径必须留在 references，防止再次长厚。"""
+        skill = (ROOT / 'SKILL.md').read_text(encoding='utf-8')
+        self.assertLessEqual(len(skill.encode('utf-8')), 14000,
+                             'SKILL.md 超过 14 KB，检查是否又把细节塞回入口')
+        self.assertIn('[静态扫描口径](references/lint-rules.md)', skill,
+                      '入口未指向静态扫描口径')
+        detail = (ROOT / 'references' / 'lint-rules.md').read_text(encoding='utf-8')
+        for token in ('零权重观察', '频率门', '文体区分', '规则台账', '批量与对比'):
+            self.assertIn(token, detail, f'lint-rules.md 缺少「{token}」')
+        for token in ('零权重观察**：', '频率门（v0.59）**'):
+            self.assertNotIn(token, skill, f'入口又内嵌了规则细节：{token}')
+
     def test_npm_package_metadata_matches_skill(self):
         """npm 包只做内容分发：名称、许可证、版本与 files 白名单必须和技能一致。"""
         pkg_path = ROOT / 'package.json'

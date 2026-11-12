@@ -1,6 +1,6 @@
 # references：知识索引
 
-本目录存放技能的工艺、流程、边界与研究文档，共 63 份，外加 1 份机器可读的规则台账。**不要整目录阅读**：先由 [统一路由](routing.md) 判定任务，再按症状加载一至三份；单次优先解决一两个主要问题。
+本目录存放技能的工艺、流程、边界与研究文档，共 64 份，外加 1 份机器可读的规则台账。**不要整目录阅读**：先由 [统一路由](routing.md) 判定任务，再按症状加载一至三份；单次优先解决一两个主要问题。
 
 ## 一、入口与地图
 
@@ -81,6 +81,7 @@
 |---|---|
 | [detection-principles.md](detection-principles.md) | AI 检测：解释边界、评分口径与验证资料要求 |
 | [detect.md](detect.md) | 三层评阅：静态提示、文本判断与作品检查 |
+| [lint-rules.md](lint-rules.md) | 静态扫描口径：计分模型、零权重观察、频率门、文体豁免、分行统计与台账；解释分数时读 |
 | [content-boundaries.md](content-boundaries.md) | 创作资料、专业事实与发布要求的证据边界 |
 | [china-screen-content-boundaries.md](china-screen-content-boundaries.md) | 中国影视内容与未成年人条款：按适用范围核对 |
 
