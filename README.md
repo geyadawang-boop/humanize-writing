@@ -4,7 +4,7 @@
 
 | 项目 | 说明 |
 |---|---|
-| 当前版本 | v0.60.3（程序与 lint 规则集 0.46） |
+| 当前版本 | v0.60.4（程序与 lint 规则集 0.46） |
 | 文档语言 | 简体中文 |
 | 运行依赖 | Python 3.8+，仅标准库，无需安装第三方包 |
 | 许可证 | [Apache-2.0](LICENSE) |
@@ -47,7 +47,7 @@ Claude Code（macOS/Linux）: ~/.claude/skills/humanize-writing
 
 Trae 或其他支持 `SKILL.md` 的环境放入各自的 skills 目录即可。技能以自身根目录定位脚本，不依赖当前工作目录。
 
-也可以用 npm 做内容分发（不提供 CLI）：`npm pack` 生成 `humanize-writing-0.60.3.tgz`，解包后把其中的 `humanize-writing/` 复制到上面的技能目录。
+也可以用 npm 做内容分发（不提供 CLI）：`npm pack` 生成 `humanize-writing-0.60.4.tgz`，解包后把其中的 `humanize-writing/` 复制到上面的技能目录。
 
 **2. 验证安装**
 
@@ -281,13 +281,13 @@ python -B scripts/ai_rate.py eval --model models/zh_hc3_logreg_v1.json
 python -B scripts/ai_rate.py explain
 ```
 
-用 31 个可解释特征（句长分布、型例比、套话密度、段首重复等）做逻辑回归，再用 Platt 校准映射到 0–1。分布内输出分数带（偏低 / 不确定 / 偏高）、分窗 IQR 与前 8 项特征贡献；汉字不足 100 个时拒绝评分。超过 1400 字时按约 320 字切窗（最多 8 窗），每窗先做分布检查；异常窗不计分、其余窗口照常汇总，全部分窗异常才整篇拒分。总分取有效窗口中位窗，特征贡献同取该窗，逐窗状态、分数与贡献见 `window_checks`。
+用 31 个可解释特征（句长分布、型例比、套话密度、段首重复等）做逻辑回归，再用 Platt 校准映射到 0–1。分布内输出分数带（偏低 / 不确定 / 偏高）、分窗 IQR 与前 8 项特征贡献；汉字不足 100 个时拒绝评分。超过 1400 字时按约 320 字切窗（最多 8 窗），每窗先做分布检查；异常窗不计分、其余窗口照常汇总，全部分窗异常才整篇拒分。部分窗口被剔除时 `coverage_status=partial`，首行写“有效窗口参考值（x/y 窗）”，汇总不代表全文；`full` 也不等于已确认属于训练分布。总分取有效窗口中位窗，特征贡献同取该窗，逐窗状态、分数与贡献见 `window_checks`。
 
 **只在训练分布内解读**：训练语料是中文问答/百科体（HC3-Chinese 5203 对）。同域测试 AUC 0.9243（95% CI 0.9124–0.9376）、EER 0.1613、Brier 0.1088；跨语料 C-ReD 只有 0.590；鲁迅《影的告别》误报 0.94。因此：
 
 - 不回答“这段是不是 AI 写的”，不判定作者；
 - 不预测知网、Turnitin、GPTZero、朱雀等外部产品的分数；
-- 声明为小说、剧本、诗歌、公文等非问答/百科文体，或全部分窗都有 6 个以上特征远离训练分布时，JSON 返回 `status: out_of_domain`，隐藏 `score`、`score_iqr`、`band` 与逐窗分数，只保留 `reasons`、`window_checks` 和特征观察；个别窗口异常时只剔除该窗，并在 `warnings` 与 `window_checks` 中说明；
+- 声明为小说、剧本、诗歌、公文等非问答/百科文体，或全部分窗都有 6 个以上特征远离训练分布时，JSON 返回 `status: out_of_domain`，隐藏 `score`、`score_iqr`、`band` 与逐窗分数，只保留 `reasons`、`window_checks` 和特征观察；个别窗口异常时只剔除该窗，`coverage_status` 为 `partial`，并在 `note`、`warnings` 与 `window_checks` 中说明；
 - 不能拿它给改稿“刷分”，也不能把分数下降当文风改善。
 
 指标、校准表、失败边界与禁用场景见 [校准报告](references/calibration-report.md)；特征清单与证据编号见 `ai_rate.py explain`。

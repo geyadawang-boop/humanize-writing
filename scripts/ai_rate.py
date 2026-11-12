@@ -477,6 +477,7 @@ def predict_text(model, text, genre=None):
     median_window = usable[mid]
     p25 = scores[order[int(0.25 * (len(scores) - 1))]]
     p75 = scores[order[int(0.75 * (len(scores) - 1))]]
+    coverage = "full" if len(usable) == len(segs) else "partial"
     result = {
         "tool": "ai_rate",
         "status": "ok",
@@ -484,6 +485,7 @@ def predict_text(model, text, genre=None):
         "chars": chars,
         "windows": len(segs),
         "usable_windows": len(usable),
+        "coverage_status": coverage,
         "score": round(median, 3),
         "score_iqr": [round(p25, 3), round(p75, 3)],
         "band": band_of(median),
@@ -493,6 +495,11 @@ def predict_text(model, text, genre=None):
         "is_authorship_judgment": False,
         "note": "0–1 是训练分布内的校准参考值，不是“AI 生成概率”，不能用于判定作者。",
     }
+    if coverage == "partial":
+        result["note"] += (
+            "coverage_status=partial 表示部分窗口被剔除，汇总只代表未触发异常规则的窗口，"
+            "不代表全文；未触发不等于已确认属于训练分布。"
+        )
     if len(segs) > 1:
         score_by_window = {usable[k]: scores[k] for k in range(len(usable))}
         checks = []
@@ -554,12 +561,15 @@ def format_report(r):
         lines.extend(_format_features(r.get("top_features", [])))
         lines.extend("注意：" + w for w in r.get("warnings", []))
         return "\n".join(lines)
-    window_note = "窗口 %d" % r["windows"]
-    if r.get("usable_windows", r["windows"]) < r["windows"]:
-        window_note += "，有效 %d" % r["usable_windows"]
+    if r.get("coverage_status") == "partial":
+        head = "有效窗口参考值 %.2f（%s；有效 %d/%d 窗，IQR %.2f–%.2f）" % (
+            r["score"], r["band"], r["usable_windows"], r["windows"],
+            r["score_iqr"][0], r["score_iqr"][1])
+    else:
+        head = "参考值 %.2f（%s；窗口 %d，IQR %.2f–%.2f）" % (
+            r["score"], r["band"], r["windows"], r["score_iqr"][0], r["score_iqr"][1])
     lines = [
-        "参考值 %.2f（%s；%s，IQR %.2f–%.2f）" % (
-            r["score"], r["band"], window_note, r["score_iqr"][0], r["score_iqr"][1]),
+        head,
         "训练分布：中文问答/百科体；跨体裁会偏移。此值不是作者判定，也不预测外部检测分数。",
     ]
     if r["windows"] > 1:

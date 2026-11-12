@@ -90,6 +90,7 @@ class PredictTest(unittest.TestCase):
         self.assertEqual(len(out["top_features"]), 8)
         self.assertEqual(out["score_window"], 1)
         self.assertEqual(out["usable_windows"], 1)
+        self.assertEqual(out["coverage_status"], "full")
         self.assertNotIn("window_checks", out)
         self.assertIn(out["band"], {"偏低", "不确定", "偏高"})
         self.assertTrue(out["warnings"])
@@ -145,6 +146,9 @@ class PredictTest(unittest.TestCase):
         self.assertEqual(out["status"], "ok")
         self.assertEqual(len(out["window_checks"]), out["windows"])
         self.assertEqual(out["usable_windows"], out["windows"] - 1)
+        self.assertEqual(out["coverage_status"], "partial")
+        self.assertIn("不代表全文", out["note"])
+        self.assertIn("未触发不等于已确认属于训练分布", out["note"])
         self.assertEqual(out["window_checks"][1]["status"], "out_of_domain")
         self.assertNotIn("score", out["window_checks"][1])
         self.assertTrue(out["window_checks"][1]["reasons"])
@@ -154,6 +158,9 @@ class PredictTest(unittest.TestCase):
         self.assertTrue(all("score" in c for c in ok_windows))
         self.assertNotEqual(out["score_window"], 2)
         self.assertTrue(any("未计入汇总" in w for w in out["warnings"]))
+        report = R.format_report(out)
+        self.assertTrue(report.startswith("有效窗口参考值 "))
+        self.assertIn("有效 %d/%d 窗" % (out["usable_windows"], out["windows"]), report)
 
     def test_all_windows_out_of_domain_rejects_text(self):
         with mock.patch.object(R.F, "vector", return_value=vec_with_z(6, 5.0)):
@@ -201,6 +208,7 @@ class PredictTest(unittest.TestCase):
         self.assertEqual(out["status"], "ok")
         self.assertGreater(out["windows"], 1)
         self.assertEqual(out["usable_windows"], out["windows"])
+        self.assertEqual(out["coverage_status"], "full")
         self.assertEqual(len(out["window_checks"]), out["windows"])
         idx = out["score_window"] - 1
         self.assertEqual(out["window_checks"][idx]["score"], out["score"])

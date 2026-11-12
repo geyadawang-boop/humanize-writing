@@ -87,7 +87,7 @@ lint 只描述“静态命中较少/适中/较多”，不充当作品判决：�
 
 计分方式、零权重观察、频率门、文体豁免、分行统计、规则台账与批量对比见 [静态扫描口径](references/lint-rules.md)，只在解释分数或核对文体口径时加载。
 
-ai_rate 只在中文问答/百科体分布内可校准：同域 AUC 0.924，跨语料 C-ReD 0.590，公版散文有真实误报。声明其他文体时整篇不给分；长文逐窗检查，异常窗不计分、其余窗照常汇总，全部分窗异常才返回 `status: out_of_domain`，只留特征观察；给分时长文分数与贡献取有效窗口中位窗。分数带只作参考，不是 AI 生成概率，不判作者、不预测外部分数。指标、边界与复现命令见 [校准报告](references/calibration-report.md)，规则与特征证据见 [检测证据库](references/detection-evidence.md)。
+ai_rate 只在中文问答/百科体分布内可校准：同域 AUC 0.924，跨语料 C-ReD 0.590，公版散文有误报。声明其他文体整篇不给分；长文逐窗检查，异常窗剔除、其余窗汇总，全部分窗异常才返回 `status: out_of_domain`，只留特征观察；给分时长文分数与贡献取有效中位窗；部分有效时标记 `coverage_status=partial`，不代表全文。分数带只作参考，不是 AI 概率，不判作者、不预测外部。指标与复现见 [校准报告](references/calibration-report.md)，证据见 [检测证据库](references/detection-evidence.md)。
 
 检测问题先读[检测证据与资料要求](references/detection-principles.md)；要本地实测口径再读[校准报告](references/calibration-report.md)；需要追溯具体研究再读[历史研究记录](references/research-basis.md)或[来源索引](references/source-evidence.md)，不阻塞一般创作。
 
