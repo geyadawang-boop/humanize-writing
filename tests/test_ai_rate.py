@@ -5,7 +5,7 @@
 1. 分数必须在 0–1 之间，且显式标记“不是作者判断”；
 2. 短文本拒绝评分，而不是给一个看似精确的数字；
 3. 模型文件里的指标与校准表必须存在，报告不能凭空引用；
-4. 分布外文本返回 out_of_domain 且不给分；长文分数与贡献取自同一窗口。
+4. 分布外文本返回 out_of_domain 且不给分；长文逐窗检查，分数与贡献取自同一窗口。
 """
 import importlib.util
 import io
@@ -14,6 +14,7 @@ import os
 from contextlib import redirect_stdout
 from pathlib import Path
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location("hw_ai_rate", ROOT / "scripts" / "ai_rate.py")
@@ -40,6 +41,13 @@ LONG_DOMAIN_TEXT = "\n\n".join(
     for line in (ROOT / "corpora" / "pairs" / "hc3_test.jsonl").read_text(encoding="utf-8").splitlines()[:12]
     if line.strip()
 )
+
+
+def vec_with_z(n, mult):
+    vec = list(MODEL["mu"])
+    for j in range(n):
+        vec[j] = MODEL["mu"][j] + mult * MODEL["sd"][j]
+    return vec
 
 
 class ModelContractTest(unittest.TestCase):
@@ -93,6 +101,74 @@ class PredictTest(unittest.TestCase):
         self.assertTrue(out["reasons"])
         self.assertEqual(len(out["top_features"]), 8)
         self.assertEqual(out["is_authorship_judgment"], False)
+
+    def test_genre_aliases_are_exact(self):
+        base = vec_with_z(0, 0)
+        for genre in ("问答", "问答体", "中文问答", "百科", "百科体", "中文百科",
+                      "qa", "Q&A", " QA ", "encyclopedia"):
+            with self.subTest(genre=genre):
+                _, reasons = R.domain_check(MODEL, HUMANISH, base, genre=genre)
+                self.assertEqual(reasons, [])
+        for genre in ("fiction", "小说", "非问答小说", "问答小说",
+                      "fiction encyclopedia", "expository", "wiki", "not qa"):
+            with self.subTest(genre=genre):
+                _, reasons = R.domain_check(MODEL, HUMANISH, base, genre=genre)
+                self.assertTrue(reasons)
+
+    def test_z_threshold_boundary(self):
+        cases = (
+            (5, 5.0, False),
+            (6, 4.0, False),
+            (6, 4.001, True),
+            (6, -5.0, True),
+            (31, 5.0, True),
+        )
+        for n, mult, expect in cases:
+            with self.subTest(n=n, mult=mult):
+                _, reasons = R.domain_check(MODEL, HUMANISH, vec_with_z(n, mult))
+                self.assertEqual(bool(reasons), expect)
+
+    def test_any_window_out_of_domain_rejects_text(self):
+        original = R.F.vector
+        calls = {"n": 0}
+
+        def fake_vector(seg):
+            calls["n"] += 1
+            if calls["n"] == 2:
+                return vec_with_z(6, 5.0)
+            return original(seg)
+
+        with mock.patch.object(R.F, "vector", side_effect=fake_vector):
+            out = R.predict_text(MODEL, LONG_DOMAIN_TEXT)
+        self.assertEqual(out["status"], "out_of_domain")
+        self.assertNotIn("score", out)
+        self.assertNotIn("window_scores", out)
+        self.assertTrue(out["window_checks"])
+        self.assertEqual(out["window_checks"][0]["status"], "ok")
+        self.assertEqual(out["window_checks"][1]["status"], "out_of_domain")
+        self.assertNotIn("score", out["window_checks"][1])
+        self.assertTrue(out["window_checks"][1]["top_features"])
+
+    def test_out_of_domain_outputs_do_not_leak_score(self):
+        out = R.predict_text(MODEL, HUMANISH, genre="fiction")
+        report = R.format_report(out)
+        self.assertNotIn("参考值", report)
+        self.assertNotIn("IQR", report)
+        self.assertIn("原因", report)
+        p = ROOT / "tests" / "tmp_ood_sample.md"
+        try:
+            p.write_text(HUMANISH, encoding="utf-8")
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = R.main(["predict", str(p), "--json", "--genre", "fiction"])
+            self.assertEqual(rc, 0)
+            data = json.loads(buf.getvalue())["results"][0]["result"]
+            self.assertEqual(data["status"], "out_of_domain")
+            for key in ("score", "score_iqr", "band", "window_scores"):
+                self.assertNotIn(key, data)
+        finally:
+            if p.exists():
+                p.unlink()
 
     def test_long_text_windows_aligned(self):
         self.assertGreater(R.cjk_len(LONG_DOMAIN_TEXT), 1400)
