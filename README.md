@@ -4,7 +4,7 @@
 
 | 项目 | 说明 |
 |---|---|
-| 当前版本 | v0.60.5（程序与 lint 规则集 0.46） |
+| 当前版本 | v0.60.6（程序与 lint 规则集 0.46） |
 | 文档语言 | 简体中文 |
 | 运行依赖 | Python 3.8+，仅标准库，无需安装第三方包 |
 | 许可证 | [Apache-2.0](LICENSE) |
@@ -47,7 +47,7 @@ Claude Code（macOS/Linux）: ~/.claude/skills/humanize-writing
 
 Trae 或其他支持 `SKILL.md` 的环境放入各自的 skills 目录即可。技能以自身根目录定位脚本，不依赖当前工作目录。
 
-也可以用 npm 做内容分发（不提供 CLI）：`npm pack` 生成 `humanize-writing-0.60.4.tgz`，解包后把其中的 `humanize-writing/` 复制到上面的技能目录。
+也可以用 npm 做内容分发（不提供 CLI）：`npm pack` 生成 `humanize-writing-0.60.6.tgz`，解包后把其中的 `humanize-writing/` 复制到上面的技能目录。
 
 **2. 验证安装**
 
