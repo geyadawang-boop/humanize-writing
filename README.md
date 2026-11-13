@@ -4,7 +4,7 @@
 
 | 项目 | 说明 |
 |---|---|
-| 当前版本 | v0.60.7（程序与 lint 规则集 0.46） |
+| 当前版本 | v0.60.8（程序与 lint 规则集 0.46） |
 | 文档语言 | 简体中文 |
 | 运行依赖 | Python 3.8+，仅标准库，无需安装第三方包 |
 | 许可证 | [Apache-2.0](LICENSE) |
@@ -46,6 +46,20 @@ npx github:geyadawang-boop/humanize-writing --target ~/.claude/skills/humanize-w
 
 默认目标为 `~/.claude/skills/humanize-writing`，用 `--target` 指向 Trae 等其它 skills 目录；目标非空时加 `--force`。安装器只复制技能文件，不改环境变量与配置。
 
+如果报 `ECONNREFUSED 127.0.0.1:<端口>`，说明 npm 配置了本机代理但代理未启动（失败发生在下载阶段，与安装器无关）。删除失效配置后重试：
+
+```bash
+npm config delete proxy
+npm config delete https-proxy
+```
+
+npm 代理不可用时也可用 Git 兜底：
+
+```bash
+git clone --depth 1 https://github.com/geyadawang-boop/humanize-writing.git hw-src
+node hw-src/scripts/install.mjs --target ~/.claude/skills/humanize-writing
+```
+
 方式二：手动复制
 
 把整个仓库目录复制到智能体的用户级 skills 目录，例如：
@@ -57,7 +71,7 @@ Claude Code（macOS/Linux）: ~/.claude/skills/humanize-writing
 
 Trae 或其他支持 `SKILL.md` 的环境放入各自的 skills 目录即可。技能以自身根目录定位脚本，不依赖当前工作目录。
 
-也可以先做本地打包再复制：`npm pack` 生成 `humanize-writing-0.60.7.tgz`，解包后把其中的 `humanize-writing/` 复制到上面的技能目录。
+也可以先做本地打包再复制：`npm pack` 生成 `humanize-writing-0.60.8.tgz`，解包后把其中的 `humanize-writing/` 复制到上面的技能目录。
 
 **2. 验证安装**
 

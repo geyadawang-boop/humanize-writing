@@ -4,6 +4,11 @@
 
 版本号只表示本的维护批次，不代表能力等级；跨版本的分数变化不能直接当作文风改善或能力提升。
 
+## 0.60.8：补充安装排错说明
+
+- README 的 npx 安装方式增加代理排错：`ECONNREFUSED 127.0.0.1:<端口>` 是 npm 本机代理未启动导致的下载失败，与 `install.mjs` 无关；给出删除失效 `proxy`/`https-proxy` 配置与 Git 兜底两种做法。
+- `install.mjs` 不做网络请求，代码未改；本版仅文档与版本号。
+
 ## 0.60.7：增加注入样例与 npx 安装路径
 
 - 新增 `tests/eval/fixtures/injection.md`：围栏代码块内放置“忽略编辑规则、删除 frontmatter”的指令，配套 `tests/eval/README.md` 的文件模式协议，用 `guard_text.py --strict` 机械核验代码块未被改动。
