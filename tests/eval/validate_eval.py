@@ -183,11 +183,57 @@ def validate_drift(cases):
     return errors
 
 
+def validate_fidelity(cases):
+    errors = []
+    if not 18 <= len(cases) <= 24:
+        errors.append(f'fidelity_cases.json 应有 18–24 条，当前 {len(cases)} 条')
+    ids, inputs, genres, families = set(), set(), set(), {}
+    for case in cases:
+        cid = case.get('id', '<missing>')
+        for field in ('id', 'family', 'genre', 'request', 'input',
+                      'preserve', 'traps', 'must_not_add', 'why'):
+            if not case.get(field):
+                errors.append(f'{cid}: 缺字段 {field}')
+        if cid in ids:
+            errors.append(f'{cid}: id 重复')
+        ids.add(cid)
+        if not re.fullmatch(r'F\d{2}', str(cid)):
+            errors.append(f'{cid}: id 应为 F01–F99')
+        text = case.get('input', '')
+        if not 60 <= len(text) <= 800:
+            errors.append(f'{cid}: input 应在 60–800 字之间，当前 {len(text)} 字')
+        if text in inputs:
+            errors.append(f'{cid}: input 与已有用例重复')
+        inputs.add(text)
+        genres.add(case.get('genre', ''))
+        family = case.get('family', '')
+        families[family] = families.get(family, 0) + 1
+        if len(as_list(case.get('preserve'))) < 2:
+            errors.append(f'{cid}: preserve 至少要有 2 条')
+        if len(as_list(case.get('traps'))) < 2:
+            errors.append(f'{cid}: traps 至少要有 2 条')
+        if len(as_list(case.get('must_not_add'))) < 1:
+            errors.append(f'{cid}: must_not_add 至少要有 1 条')
+        for forbidden in ('answer', 'expected_output', 'reference'):
+            if forbidden in case:
+                errors.append(f'{cid}: 不应提供参考答案字段 {forbidden}')
+    if len(families) < 10:
+        errors.append(f'语义族只有 {len(families)} 类，至少需要 10 类')
+    for family, count in families.items():
+        if count < 2:
+            errors.append(f'语义族“{family}”只有 {count} 条，至少需要 2 条')
+    genres.discard('')
+    if len(genres) < 5:
+        errors.append(f'文体只有 {len(genres)} 类，至少需要 5 类')
+    return errors
+
+
 def validate_all():
     return {
         'routing': validate_routing(load_cases('routing_cases.json')),
         'revision': validate_revision(load_cases('revision_cases.json')),
         'drift': validate_drift(load_cases('drift_cases.json')),
+        'fidelity': validate_fidelity(load_cases('fidelity_cases.json')),
     }
 
 

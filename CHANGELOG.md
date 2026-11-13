@@ -4,6 +4,14 @@
 
 版本号只表示本的维护批次，不代表能力等级；跨版本的分数变化不能直接当作文风改善或能力提升。
 
+## 0.60.5：增加受保护内容比对与语义保真探针
+
+- 新增 `scripts/guard_text.py`：机械比对 frontmatter、围栏代码、行内代码、链接目标、标题层级、表格列数/行数、有序列表条目数与显式 ID；先遮罩代码再解析其余结构，避免代码里的 `#`、`|`、`](` 被误抽。默认报告式返回 0，`--strict` 存在未登记 hard 项才返回 1，`--allow` 登记授权删改。
+- `compare_report.py` 新增第五节“受保护内容核对”；两稿相似度低于 0.3 时跳过比对，避免无关文本产生假警报；前四节与退出码不变。
+- 新增 `tests/eval/fidelity_cases.json`（20 条、10 个语义族）与 `fidelity_sheet.csv`，补“缺数据、推测归因、独立列举、进行/计划、范围否定、未知施事者、作者样本、引语、条件与顺序、授权边界”的保真探针；`validate_eval.py` 增加结构校验，明确拒绝参考答案字段。
+- `README`、`editing-workflow.md`、`lint-rules.md`、`tests/eval/README.md` 同步说明；新增 22 项测试，测试总数 301 → 323。
+- 不改 lint 规则、规则台账、`RULESET_VERSION=0.46` 与 `ai_rate` 判定逻辑。
+
 ## 0.60.4：补充部分覆盖语义
 
 - 打分结果新增 `coverage_status`：全部窗口有效为 `full`，部分窗口被剔除为 `partial`；单窗文本恒为 `full`。

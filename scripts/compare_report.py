@@ -12,6 +12,7 @@
     二、改前命中分级清单（加权项 / 零权重观察，逐条标注改后是否仍命中）
     三、逐段对照（删除用删除线，新增用粗体或 <ins>）
     四、语义候选与人工判读（可选 --semantic 合并判读 JSON）
+    五、受保护内容核对（frontmatter/代码/链接/标题/表格/ID 的机械比对）
 
 分数口径与 ai_smell_lint.py 完全一致：只表示本规则集的加权命中，不判作者身份、
 文学质量或外部检测结果；两稿分数之差也不能单独证明改稿收益，仍要按问题逐条核读。
@@ -26,6 +27,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import ai_smell_lint as lint  # noqa: E402
+import guard_text as guard  # noqa: E402
 
 STATUS_TAGS = ("[概览]", "[genre]", "[短文本]")
 DEFAULT_OUT = "改前改后对比报告"
@@ -193,6 +195,25 @@ def _md_cell(text):
     return text.replace("|", "\\|")
 
 
+def protected_result(before_text, after_text):
+    """两稿相似度过低时跳过，避免拿无关文本生成大量假警报。"""
+    ratio = difflib.SequenceMatcher(None, before_text, after_text).quick_ratio()
+    if ratio < 0.3:
+        return {"skipped": True, "ratio": ratio}
+    return guard.compare(before_text, after_text)
+
+
+def protected_lead(result):
+    if result.get("skipped"):
+        return ("两稿相似度过低（%.2f），可能不是同一篇的修订，"
+                "跳过受保护内容比对。" % result["ratio"])
+    summary = result["summary"]
+    if not result["hard"] and not result["soft"]:
+        return "受保护内容：未发现丢失或结构改变。"
+    return ("受保护内容：丢失/改变 %d 项、观察 %d 项、新增 %d 项；逐条见下。"
+            % (summary["hard"], summary["soft"], summary["added"]))
+
+
 def build_md(before_text, after_text, before, after, name0, name1, semantic, title):
     parts = []
     parts.append("# %s" % title)
@@ -281,6 +302,31 @@ def build_md(before_text, after_text, before, after, name0, name1, semantic, tit
             parts.append("- %s%s" % (m, mark))
     else:
         parts.append("改后稿没有语义候选行；语义候选只在命中时输出（ai_smell_lint.py --candidates）。")
+    parts.append("")
+
+    parts.append("## 五、受保护内容核对")
+    parts.append("")
+    protected = protected_result(before_text, after_text)
+    parts.append(protected_lead(protected))
+    parts.append("")
+    if not protected.get("skipped"):
+        if protected["hard"]:
+            parts.append("| 类型 | 位置（改前） | 说明 |")
+            parts.append("| --- | ---: | --- |")
+            for item in protected["hard"]:
+                parts.append("| %s | %s | %s |" % (
+                    _md_cell(item["kind"]),
+                    item.get("line_before", "-"),
+                    _md_cell(item["detail"])))
+            parts.append("")
+        if protected["soft"]:
+            parts.append("观察项（不阻断，需人工判断是否为有意改写）：")
+            parts.append("")
+            for item in protected["soft"]:
+                parts.append("- %s 第 %s 行：%s" % (
+                    item["kind"], item.get("line_before", "?"), item["detail"]))
+            parts.append("")
+    parts.append("机械比对只覆盖可识别结构，不等于事实核读；新增内容不在此判定。")
     parts.append("")
     return "\n".join(parts)
 
@@ -372,6 +418,29 @@ def build_html(before_text, after_text, before, after, name0, name1, semantic, t
         out.append("</ul>")
     else:
         out.append("<p>改后稿没有语义候选行。</p>")
+
+    out.append("<h2>五、受保护内容核对</h2>")
+    protected = protected_result(before_text, after_text)
+    out.append("<p>%s</p>" % e(protected_lead(protected)))
+    if not protected.get("skipped"):
+        if protected["hard"]:
+            out.append("<table><tr><th>类型</th><th>位置（改前）</th><th>说明</th></tr>")
+            for item in protected["hard"]:
+                out.append("<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (
+                    e(item["kind"]),
+                    e(str(item.get("line_before", "-"))),
+                    e(item["detail"])))
+            out.append("</table>")
+        if protected["soft"]:
+            out.append("<p>观察项（不阻断，需人工判断是否为有意改写）：</p><ul>")
+            for item in protected["soft"]:
+                out.append("<li>%s 第 %s 行：%s</li>" % (
+                    e(item["kind"]),
+                    e(str(item.get("line_before", "?"))),
+                    e(item["detail"])))
+            out.append("</ul>")
+    out.append('<p class="small">机械比对只覆盖可识别结构，不等于事实核读；'
+               "新增内容不在此判定。</p>")
     out.append("</body></html>")
     return "\n".join(out)
 

@@ -56,6 +56,8 @@ class CompareReportTests(unittest.TestCase):
         self.assertIn("## 三、逐段对照", text)
         self.assertIn("~~现代社会中", text)
         self.assertIn("## 四、语义候选与人工判读", text)
+        self.assertIn("## 五、受保护内容核对", text)
+        self.assertIn("跳过受保护内容比对", text)
 
     def test_html_report_marks_deletions_and_insertions(self):
         code, out, _, _ = self.build(fmt="html")
@@ -64,7 +66,21 @@ class CompareReportTests(unittest.TestCase):
         self.assertIn("<del>", text)
         self.assertIn("<ins>", text)
         self.assertIn("静态写作线索分", text)
+        self.assertIn("五、受保护内容核对", text)
         self.assertNotIn("<script>", text)
+
+    def test_protected_section_reports_missing_code_block(self):
+        before = "# 标题\n\n说明段。\n\n```python\nprint(1)\n```\n\n结尾段。\n"
+        after = "# 标题\n\n说明段。\n\n结尾段。\n"
+        self.before.write_text(before, encoding="utf-8")
+        self.after.write_text(after, encoding="utf-8")
+        code, out, _, _ = self.build()
+        self.assertEqual(code, 0)
+        text = out.read_text(encoding="utf-8")
+        self.assertIn("## 五、受保护内容核对", text)
+        self.assertIn("code_block", text)
+        self.assertIn("围栏代码块丢失", text)
+        self.assertNotIn("跳过受保护内容比对", text)
 
     def test_gbk_input_uses_same_decoding_as_lint(self):
         text = "他走进房间，看见桌上放着一封信。窗外的雨还没有停。" * 10

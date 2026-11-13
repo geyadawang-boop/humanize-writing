@@ -64,7 +64,7 @@ metadata:
 
 ## 工具入口
 
-脚本均以 skill 根目录定位，不假设当前工作目录：
+脚本按 skill 根目录定位：
 
 ```text
 python -B <skill>/scripts/writing_project.py --help
@@ -75,8 +75,8 @@ python -B <skill>/scripts/ai_smell_lint.py --fingerprint <draft.md>
 python -B <skill>/scripts/ai_smell_lint.py --candidates <draft.md>
 python -B <skill>/scripts/ai_smell_lint.py --all <draft.md>
 python -B <skill>/scripts/ai_smell_lint.py 稿子目录/
-python -B <skill>/scripts/compare_report.py 改前.md 改后.md
-python -B <skill>/scripts/compare_report.py 改前.md 改后.md --format html --out 报告.html
+python -B <skill>/scripts/compare_report.py 改前.md 改后.md [--format html --out 报告.html]
+python -B <skill>/scripts/guard_text.py 改前.md 改后.md --strict
 python -B <skill>/scripts/ai_rate.py predict 稿子.md
 python -B <skill>/scripts/ai_rate.py predict 稿子.md --json --genre qa
 python -B <skill>/scripts/ai_rate.py predict 小说.md --genre fiction

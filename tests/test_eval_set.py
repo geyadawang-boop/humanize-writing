@@ -26,6 +26,11 @@ class EvalSetTests(unittest.TestCase):
         errors = VALIDATOR.validate_drift(VALIDATOR.load_cases('drift_cases.json'))
         self.assertEqual(errors, [], '\n'.join(errors))
 
+    def test_fidelity_cases_are_valid(self):
+        errors = VALIDATOR.validate_fidelity(
+            VALIDATOR.load_cases('fidelity_cases.json'))
+        self.assertEqual(errors, [], '\n'.join(errors))
+
     def test_eval_files_use_utf8_without_crlf(self):
         for path in sorted(EVAL.iterdir()):
             if path.suffix not in ('.md', '.py', '.json', '.csv'):

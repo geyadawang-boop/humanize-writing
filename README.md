@@ -4,7 +4,7 @@
 
 | 项目 | 说明 |
 |---|---|
-| 当前版本 | v0.60.4（程序与 lint 规则集 0.46） |
+| 当前版本 | v0.60.5（程序与 lint 规则集 0.46） |
 | 文档语言 | 简体中文 |
 | 运行依赖 | Python 3.8+，仅标准库，无需安装第三方包 |
 | 许可证 | [Apache-2.0](LICENSE) |
@@ -160,21 +160,22 @@ humanize-writing/
 ├── templates/               # 13 份项目模板（见 templates/README.md）
 ├── corpora/                 # 5203 对 HC3-Chinese 同题语料 + manifest（CC BY-SA 4.0）
 ├── models/                  # 31 特征逻辑回归 + Platt 校准模型（12 KB JSON）
-├── scripts/                 # 8 个仅用标准库的脚本
+├── scripts/                 # 9 个仅用标准库的脚本
 │   ├── writing_project.py   # 11 个子命令的项目记录器
 │   ├── ledger_check.py      # 6 组台账检查
 │   ├── ai_smell_lint.py     # 静态写作线索扫描
 │   ├── compare_report.py    # 改前改后对比报告
+│   ├── guard_text.py        # 受保护内容机械比对（代码/链接/标题/表格/ID）
 │   ├── features.py          # 31 个可解释写作特征
 │   ├── ai_rate.py           # 校准参考分：train / eval / predict / explain
 │   ├── corpus_build.py      # 语料下载、清洗、切分与 manifest 校验
 │   └── evidence_measure.py  # 在冻结语料上测量规则与特征的区分力
-└── tests/                   # 22 组、301 项单元测试 + 真实任务评测集 + selftest + 冻结语料
+└── tests/                   # 23 组、323 项单元测试 + 真实任务评测集 + selftest + 冻结语料
 ```
 
 ## 命令行工具
 
-八个脚本都只用 Python 标准库，不要求安装 hook 或 CI，也不会在后台自动执行。前四个面向稿件与项目，后四个面向模型、语料与证据复现。
+九个脚本都只用 Python 标准库，不要求安装 hook 或 CI，也不会在后台自动执行。前五个面向稿件与项目，后四个面向模型、语料与证据复现。
 
 ### writing_project.py：项目记录器
 
@@ -269,7 +270,17 @@ python -B scripts/compare_report.py 原稿.md 修订稿.md --format md
 python -B scripts/compare_report.py 原稿.md 修订稿.md --format html --semantic 人工判读.json
 ```
 
-同一规则集评改前改后两稿，输出指标对比表、分级命中清单（标注改后是否仍命中）、逐段标红对照，可合并人工判读 JSON。它展示“改了什么、哪些指标变了”，不证明改得更好。
+同一规则集评改前改后两稿，输出指标对比表、分级命中清单（标注改后是否仍命中）、逐段标红对照，可合并人工判读 JSON。第五节另做受保护内容的机械比对。它展示“改了什么、哪些指标变了”，不证明改得更好。
+
+### guard_text.py：受保护内容比对
+
+```bash
+python -B scripts/guard_text.py 原稿.md 修订稿.md
+python -B scripts/guard_text.py 原稿.md 修订稿.md --strict
+python -B scripts/guard_text.py 原稿.md 修订稿.md --json --allow 允许例外.json
+```
+
+比对 frontmatter、围栏代码、行内代码、链接目标、标题层级、表格列数与行数、有序列表条目数、显式 ID。默认报告式返回 0，`--strict` 存在未登记的 hard 项才返回 1；用户明确要求删除或改名时，用 `--allow` 登记原因。它只说明结构是否丢失或改变，不判断事实、语义与作者身份。
 
 ### ai_rate.py：校准参考分
 
@@ -309,6 +320,7 @@ python -B scripts/evidence_measure.py
 | `ledger_check.py` | 检查完整且无红线（仍可能有黄线） | 存在红线 | 输入不完整或调用错误（优先于红线） |
 | `ai_smell_lint.py` | 未超静态阈值 | 超过静态阈值，需按文体核读 | 输入不足、语言未确认或参数错误 |
 | `compare_report.py` | 报告已生成 | — | 输入或判读 JSON 无法读取 |
+| `guard_text.py` | 未发现未登记 hard 项（可仍有观察项） | `--strict` 下有未登记 hard 项 | 输入或 allow 文件无法读取 |
 | `ai_rate.py` | 已评分 / 已训练 / 已打印（含 `insufficient` 与 `out_of_domain`） | — | 输入无法解码或参数错误 |
 
 退出码 0 只说明**该工具在该口径下通过了**，不构成作品质量结论。
@@ -319,13 +331,13 @@ python -B scripts/evidence_measure.py
 
 | 项目 | 现状 |
 |---|---|
-| 自动化测试 | 301 项 unittest 全部通过；`selftest.py` RC=0 |
-| 语义评测 | `tests/eval/`：26 条路由用例、7 组改稿盲评、3 条长篇续写漂移；需另起模型会话按协议运行 |
+| 自动化测试 | 323 项 unittest 全部通过；`selftest.py` RC=0 |
+| 语义评测 | `tests/eval/`：26 条路由用例、7 组改稿盲评、20 条语义保真探针、3 条长篇续写漂移；需另起模型会话按协议运行 |
 | 结构审计 | 全部文件 UTF-8 / LF；本地链接可达；84 篇 references 均有加载入口 |
 | 规则台账 | 41 条（加权 16 / 观察 15 / 状态 10），探针逐条驱动；10 条附 HC3 实测登记 |
 | 参考分模型 | 31 特征逻辑回归；3667 / 823 / 713 对切分；test AUC 0.9243（CI 0.9124–0.9376）、EER 0.1613、Brier 0.1088 |
 | 冻结语料 | 7 套（含 6 套配对集与随包 HC3 5203 对），方向测试锁定权重 |
-| 端到端 | `init` → 写章 → `lint` → 改写 → `compare_report` → `checkpoint` → `check` |
+| 端到端 | `init` → 写章 → `lint` → 改写 → `compare_report` / `guard_text` → `checkpoint` → `check` |
 | 三副本 | Desktop / `.trae-cn` / `.claude` 逐文件 SHA256 一致 |
 
 应同时看正例与反例：空模板拒绝、计划内伏笔不误报、战力逐行判级、正文或台账改动后评阅失效、小说与剧本的完整微型示例，以及真实请求的路由行为。
