@@ -4,7 +4,7 @@
 
 | 项目 | 说明 |
 |---|---|
-| 当前版本 | v0.60.6（程序与 lint 规则集 0.46） |
+| 当前版本 | v0.60.7（程序与 lint 规则集 0.46） |
 | 文档语言 | 简体中文 |
 | 运行依赖 | Python 3.8+，仅标准库，无需安装第三方包 |
 | 许可证 | [Apache-2.0](LICENSE) |
@@ -38,6 +38,16 @@
 
 **1. 放入技能目录**
 
+方式一：npx（免手动复制，需要 Node.js 18+）
+
+```bash
+npx github:geyadawang-boop/humanize-writing --target ~/.claude/skills/humanize-writing
+```
+
+默认目标为 `~/.claude/skills/humanize-writing`，用 `--target` 指向 Trae 等其它 skills 目录；目标非空时加 `--force`。安装器只复制技能文件，不改环境变量与配置。
+
+方式二：手动复制
+
 把整个仓库目录复制到智能体的用户级 skills 目录，例如：
 
 ```text
@@ -47,7 +57,7 @@ Claude Code（macOS/Linux）: ~/.claude/skills/humanize-writing
 
 Trae 或其他支持 `SKILL.md` 的环境放入各自的 skills 目录即可。技能以自身根目录定位脚本，不依赖当前工作目录。
 
-也可以用 npm 做内容分发（不提供 CLI）：`npm pack` 生成 `humanize-writing-0.60.6.tgz`，解包后把其中的 `humanize-writing/` 复制到上面的技能目录。
+也可以先做本地打包再复制：`npm pack` 生成 `humanize-writing-0.60.7.tgz`，解包后把其中的 `humanize-writing/` 复制到上面的技能目录。
 
 **2. 验证安装**
 
@@ -160,7 +170,7 @@ humanize-writing/
 ├── templates/               # 13 份项目模板（见 templates/README.md）
 ├── corpora/                 # 5203 对 HC3-Chinese 同题语料 + manifest（CC BY-SA 4.0）
 ├── models/                  # 31 特征逻辑回归 + Platt 校准模型（12 KB JSON）
-├── scripts/                 # 9 个仅用标准库的脚本
+├── scripts/                 # 9 个仅用标准库的 Python 脚本 + 1 个 Node 安装器
 │   ├── writing_project.py   # 11 个子命令的项目记录器
 │   ├── ledger_check.py      # 6 组台账检查
 │   ├── ai_smell_lint.py     # 静态写作线索扫描
@@ -169,13 +179,14 @@ humanize-writing/
 │   ├── features.py          # 31 个可解释写作特征
 │   ├── ai_rate.py           # 校准参考分：train / eval / predict / explain
 │   ├── corpus_build.py      # 语料下载、清洗、切分与 manifest 校验
-│   └── evidence_measure.py  # 在冻结语料上测量规则与特征的区分力
-└── tests/                   # 23 组、323 项单元测试 + 真实任务评测集 + selftest + 冻结语料
+│   ├── evidence_measure.py  # 在冻结语料上测量规则与特征的区分力
+│   └── install.mjs          # npx 安装器（复制技能文件，不改配置）
+└── tests/                   # 23 组、324 项单元测试 + 真实任务评测集 + selftest + 冻结语料
 ```
 
 ## 命令行工具
 
-九个脚本都只用 Python 标准库，不要求安装 hook 或 CI，也不会在后台自动执行。前五个面向稿件与项目，后四个面向模型、语料与证据复现。
+九个 Python 脚本都只用标准库，不要求安装 hook 或 CI，也不会在后台自动执行。前五个面向稿件与项目，后四个面向模型、语料与证据复现。`scripts/install.mjs` 只做文件复制，不参与评分。
 
 ### writing_project.py：项目记录器
 
@@ -331,8 +342,8 @@ python -B scripts/evidence_measure.py
 
 | 项目 | 现状 |
 |---|---|
-| 自动化测试 | 323 项 unittest 全部通过；`selftest.py` RC=0 |
-| 语义评测 | `tests/eval/`：26 条路由用例、7 组改稿盲评、20 条语义保真探针、3 条长篇续写漂移；需另起模型会话按协议运行 |
+| 自动化测试 | 324 项 unittest 全部通过；`selftest.py` RC=0 |
+| 语义评测 | `tests/eval/`：26 条路由用例、7 组改稿盲评、20 条语义保真探针、3 条长篇续写漂移、1 个文件模式注入样例；需另起模型会话按协议运行 |
 | 结构审计 | 全部文件 UTF-8 / LF；本地链接可达；84 篇 references 均有加载入口 |
 | 规则台账 | 41 条（加权 16 / 观察 15 / 状态 10），探针逐条驱动；10 条附 HC3 实测登记 |
 | 参考分模型 | 31 特征逻辑回归；3667 / 823 / 713 对切分；test AUC 0.9243（CI 0.9124–0.9376）、EER 0.1613、Brier 0.1088 |

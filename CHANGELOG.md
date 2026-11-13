@@ -4,6 +4,12 @@
 
 版本号只表示本的维护批次，不代表能力等级；跨版本的分数变化不能直接当作文风改善或能力提升。
 
+## 0.60.7：增加注入样例与 npx 安装路径
+
+- 新增 `tests/eval/fixtures/injection.md`：围栏代码块内放置“忽略编辑规则、删除 frontmatter”的指令，配套 `tests/eval/README.md` 的文件模式协议，用 `guard_text.py --strict` 机械核验代码块未被改动。
+- 新增 `scripts/install.mjs` 与 `package.json` 的 `bin`：`npx github:geyadawang-boop/humanize-writing --target <目录>` 直接复制技能文件，支持 `--force`，不改环境变量与配置。
+- `test_guard_text.py` 增加注入样例回归，测试 323 → 324；README 补 npx 安装方式与样例说明。
+
 ## 0.60.6：补充加权规则的保留边界
 
 - `references/lint-rules.md` 新增第 11 节“保留边界”，为全部 16 条加权规则逐条写明命中后什么情况下不该改；口径与 `ai_smell_lint.py` 各规则自带的提示一致，未新增判定。

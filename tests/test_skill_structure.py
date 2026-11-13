@@ -146,7 +146,7 @@ class SkillStructureTests(unittest.TestCase):
                 self.assertIn(f'({part})', text, f'{main} 未链接 {part}')
 
     def test_npm_package_metadata_matches_skill(self):
-        """npm 包只做内容分发：名称、许可证、版本与 files 白名单必须和技能一致。"""
+        """npm 包做内容分发并提供安装器：名称、许可证、版本与 files 白名单必须和技能一致。"""
         pkg_path = ROOT / 'package.json'
         self.assertTrue(pkg_path.is_file(), '缺少 package.json')
         pkg = json.loads(pkg_path.read_text(encoding='utf-8'))
@@ -161,7 +161,8 @@ class SkillStructureTests(unittest.TestCase):
         for entry in ('SKILL.md', 'references/', 'scripts/', 'templates/', 'tests/'):
             self.assertIn(entry, pkg['files'], f'files 白名单缺少 {entry}')
         self.assertNotIn('.git', pkg['files'])
-        self.assertFalse(pkg.get('bin'), '内容分发包不应暴露 CLI 入口')
+        self.assertEqual(pkg.get('bin'), {'humanize-writing': 'scripts/install.mjs'},
+                         '只允许安装器入口，不提供评分或检测 CLI')
 
 
 if __name__ == '__main__':
